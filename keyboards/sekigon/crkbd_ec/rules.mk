@@ -18,6 +18,7 @@ RGB_MATRIX_DRIVER = WS2812
 VIA_ENABLE = yes
 BOOTMAGIC_ENABLE = lite     # Virtual DIP switch configuration
 MOUSEKEY_ENABLE = yes       # Mouse keys
+TAP_DANCE_ENABLE = yes
 EXTRAKEY_ENABLE = yes       # Audio control and System control
 CONSOLE_ENABLE = yes        # Console for debug
 COMMAND_ENABLE = no         # Commands for debug and configuration
