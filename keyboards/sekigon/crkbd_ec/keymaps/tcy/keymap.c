@@ -96,6 +96,7 @@ enum {
     TD_P,
     TD_L,
     TD_ENT,
+    TD_LCTL,
     TD_SCLN,
     TD_LGUI,
     TD_RALT,
@@ -744,11 +745,6 @@ void td_lgui_finished (qk_tap_dance_state_t *state, void *user_data) {
 
       case DOUBLE_SINGLE_TAP:
       case DOUBLE_HOLD:
-          register_code(KC_RALT);
-          break;
-
-      case TRIPLE_SINGLE_TAP:
-      case TRIPLE_HOLD:
           layer_on(_NUM_PADS);
           break;
   }
@@ -765,12 +761,41 @@ void td_lgui_reset (qk_tap_dance_state_t *state, void *user_data) {
 
         case DOUBLE_SINGLE_TAP:
         case DOUBLE_HOLD:
-            unregister_code(KC_RALT);
+            layer_off(_NUM_PADS);
+            break;
+    }
+    xtap_state.state = 0;
+}
+
+void td_lctl_finished (qk_tap_dance_state_t *state, void *user_data) {
+  xtap_state.state = cur_dance(state);
+  is_hold_tapdance_disabled = false;
+
+  switch (xtap_state.state) {
+      case SINGLE_TAP:
+      case SINGLE_HOLD:
+          register_code(KC_LCTL);
+          break;
+
+      case DOUBLE_SINGLE_TAP:
+      case DOUBLE_HOLD:
+          register_code(KC_LALT);
+          break;
+  }
+}
+
+void td_lctl_reset (qk_tap_dance_state_t *state, void *user_data) {
+    is_hold_tapdance_disabled = false;
+
+    switch (xtap_state.state) {
+        case SINGLE_TAP:
+        case SINGLE_HOLD:
+            unregister_code(KC_LCTL);
             break;
 
-        case TRIPLE_SINGLE_TAP:
-        case TRIPLE_HOLD:
-            layer_off(_NUM_PADS);
+        case DOUBLE_SINGLE_TAP:
+        case DOUBLE_HOLD:
+            unregister_code(KC_LALT);
             break;
     }
     xtap_state.state = 0;
