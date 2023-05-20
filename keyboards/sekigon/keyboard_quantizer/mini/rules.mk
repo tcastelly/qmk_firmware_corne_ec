@@ -1,5 +1,6 @@
 SRC += matrix.c c1_main.c c1_usbh.c tusb_os_custom.c
 CUSTOM_MATRIX = lite
+POINTING_DEVICE_DRIVER = custom
 
 OPT_DEFS += -DCRT0_EXTRA_CORES_NUMBER=1
 

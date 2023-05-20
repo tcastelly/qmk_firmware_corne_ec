@@ -30,17 +30,7 @@
  extern "C" {
 #endif
 
- typedef struct {
-     struct {
-         void *prev;
-             void *next;
-     } queue_t;
-     void* owner;
-     void* next;
-     uint32_t cnt;
- } chtemp_mutex_t;
-
-typedef chtemp_mutex_t osal_mutex_def_t, *osal_mutex_t;
+typedef uint8_t osal_mutex_def_t, *osal_mutex_t;
 void osal_task_delay(uint32_t msec);
 osal_mutex_t osal_mutex_create(osal_mutex_def_t* mdef);
 bool osal_mutex_lock (osal_mutex_t mutex_hdl, uint32_t msec);
@@ -55,7 +45,7 @@ bool osal_mutex_unlock(osal_mutex_t mutex_hdl);
 typedef struct
 {
     tu_fifo_t ff;
-    chtemp_mutex_t mutex;
+    osal_mutex_def_t mutex;
 } osal_queue_def_t;
 
 typedef osal_queue_def_t* osal_queue_t;

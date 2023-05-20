@@ -1,17 +1,21 @@
 {
     "manufacturer": "sekigon-gonnoc",
-    "keyboard_name": "sekigon/keyboard_quantizer/mini",
+    "keyboard_name": "Keyboard Quantizer",
     "maintainer": "sekigon-gonnoc",
     "bootloader": "rp2040",
     "diode_direction": "COL2ROW",
     "features": {
-        "bootmagic": true,
-        "command": true,
+        "bootmagic": false,
+        "command": false,
         "console": true,
         "extrakey": true,
         "mousekey": true,
         "nkro": true,
-        "virtser": true
+        "virtser": true,
+        "pointing_device": true
+    },
+    "qmk": {
+        "tap_keycode_delay": 10
     },
     "matrix_pins": {
         "cols": [

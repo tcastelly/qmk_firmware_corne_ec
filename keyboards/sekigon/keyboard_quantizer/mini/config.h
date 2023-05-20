@@ -3,6 +3,10 @@
 
 #pragma once
 
+// override backing_store_lock/unlock to control core1
+#pragma weak backing_store_lock
+#pragma weak backing_store_unlock
+
 /*
  * Feature disable options
  *  These options are also useful to firmware size reduction.

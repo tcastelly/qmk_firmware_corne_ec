@@ -8,17 +8,18 @@ void osal_task_delay(uint32_t msec) {
     chThdSleepMilliseconds(msec);
 }
 
-osal_mutex_t osal_mutex_create(osal_mutex_def_t* mdef) {
-    chMtxObjectInit((mutex_t*)mdef);
-    return mdef;
-}
-
 bool osal_mutex_lock(osal_mutex_t mutex_hdl, uint32_t msec) {
-    chMtxLock((mutex_t*)mutex_hdl);
+    // Because this function is called from both of thread and ISR contexts,
+    // the only way to control coherency is system lock
+    chSysLock();
     return true;
 }
 
 bool osal_mutex_unlock(osal_mutex_t mutex_hdl) {
-    chMtxUnlock((mutex_t*)mutex_hdl);
+    chSysUnlock();
     return true;
+}
+
+osal_mutex_t osal_mutex_create(osal_mutex_def_t* mdef) {
+    return mdef;
 }

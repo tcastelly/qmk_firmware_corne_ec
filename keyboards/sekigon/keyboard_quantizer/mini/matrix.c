@@ -6,7 +6,12 @@
 #include "print.h"
 #include "tusb.h"
 #include "pio_usb_ll.h"
+#include "report_descriptor_parser.h"
+#include "report_parser.h"
 
+matrix_row_t*           matrix_dest;
+matrix_row_t*           matrix_mouse_dest;
+bool                    mouse_send_flag = false;
 static uint8_t          kbd_addr;
 static uint8_t          kbd_instance;
 static int32_t          led_count = -1;
@@ -18,6 +23,7 @@ static uint8_t          pre_keyreport[8];
 #define LED_BLINK_TIME_MS 50
 #define KQ_PIN_LED 7
 #define MATRIX_MODIFIER_ROW 21
+#define MATRIX_MSBTN_ROW 22
 
 extern void busy_wait_us(uint64_t delay_us);
 static bool send_led_report(uint8_t* leds);
@@ -47,33 +53,10 @@ bool matrix_scan_custom(matrix_row_t current_matrix[]) {
 
     // If keyboard report is received, apply it to matrix
     if (hid_report_size > 0) {
-        hid_report_size = 0;
-        dprintf("%02x %02x %02x %02x %02x %02x %02x %02x\n", hid_report_buffer[0], hid_report_buffer[1], hid_report_buffer[2], hid_report_buffer[3], hid_report_buffer[4], hid_report_buffer[5], hid_report_buffer[6], hid_report_buffer[7]);
-        if (memcmp(pre_keyreport, hid_report_buffer, 8) == 0) {
-            // no change
-            matrix_has_changed = false;
-
-            return matrix_has_changed;
-        } else {
-            matrix_has_changed = true;
-            memcpy(pre_keyreport, hid_report_buffer, 8);
-        }
-
-        // clear all bit
-        for (uint8_t rowIdx = 0; rowIdx < MATRIX_ROWS; rowIdx++) {
-            current_matrix[rowIdx] = 0;
-        }
-
-        // set bits
-        for (uint8_t keyIdx = 0; keyIdx < 6; keyIdx++) {
-            uint8_t key    = hid_report_buffer[keyIdx + 2];
-            uint8_t rowIdx = key / (sizeof(uint8_t) * 8);
-            uint8_t colIdx = key - rowIdx * (sizeof(uint8_t) * 8);
-            current_matrix[rowIdx] |= (1 << colIdx);
-        }
-
-        // modifier bits
-        current_matrix[MATRIX_MODIFIER_ROW] = hid_report_buffer[0];
+        hid_report_size    = 0;
+        matrix_dest        = current_matrix;
+        matrix_mouse_dest  = &current_matrix[MATRIX_MSBTN_ROW];
+        matrix_has_changed = parse_report(hid_instance, hid_report_buffer, hid_report_size);
         return matrix_has_changed;
     } else {
         return false;
@@ -103,6 +86,8 @@ void housekeeping_task_kb(void) {
             led_count = -1;
         }
     }
+
+    housekeeping_task_user();
 }
 
 static bool send_led_report(uint8_t* leds) {
@@ -113,15 +98,15 @@ static bool send_led_report(uint8_t* leds) {
     return false;
 }
 
-void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_report, uint16_t desc_len) {
-    dprintf("HID mounted:%d:%d\n", dev_addr, instance);
+void tuh_mount_cb(uint8_t dev_addr) {
+    dprintf("USB device is mounted:%d\n", dev_addr);
 
     if (led_count < 0) {
         led_count = timer_read();
     }
 
     for (int instance = 0; instance < tuh_hid_instance_count(dev_addr); instance++) {
-        tuh_hid_receive_report(dev_addr, instance);
+        tuh_hid_set_protocol(dev_addr, instance, HID_PROTOCOL_REPORT);
 
         uint8_t const itf_protocol = tuh_hid_interface_protocol(dev_addr, instance);
         if (itf_protocol == HID_ITF_PROTOCOL_KEYBOARD) {
@@ -129,6 +114,12 @@ void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_re
             kbd_instance = instance;
         }
     }
+}
+
+void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_report, uint16_t desc_len) {
+    dprintf("HID is mounted:%d:%d\n", dev_addr, instance);
+    parse_report_descriptor(instance, desc_report, desc_len);
+    tuh_hid_receive_report(dev_addr, instance);
 }
 
 void tuh_hid_umount_cb(uint8_t dev_addr, uint8_t instance) {
@@ -145,7 +136,7 @@ void tuh_hid_report_received_cb(uint8_t dev_addr, uint8_t instance, uint8_t cons
         led_count = timer_read();
     }
 
-    if (len > 0 && instance == kbd_instance) {
+    if (len > 0) {
         int cnt = 0;
         while (hid_report_size > 0 && cnt++ < 50000) {
             busy_wait_us(1);
@@ -160,4 +151,75 @@ void tuh_hid_report_received_cb(uint8_t dev_addr, uint8_t instance, uint8_t cons
     }
 
     tuh_hid_receive_report(dev_addr, instance);
+}
+
+__attribute__((weak)) void keyboard_report_hook(keyboard_parse_result_t const* report) {
+    if (debug_enable) {
+        uprintf("Keyboard report\n");
+        for (int idx = 0; idx < sizeof(report->bits); idx++) {
+            uprintf("%02X ", report->bits[idx]);
+        }
+        uprintf("\n");
+    }
+
+    for (uint8_t rowIdx = 0; rowIdx < MATRIX_ROWS - 1; rowIdx++) {
+        matrix_dest[rowIdx] = report->bits[rowIdx];
+    }
+
+    // copy modifier bits
+    matrix_dest[MATRIX_MODIFIER_ROW] = report->bits[28];
+}
+
+__attribute__((weak)) void mouse_report_hook(mouse_parse_result_t const* report) {
+    if (debug_enable) {
+        uprintf("Mouse report\n");
+        uprintf("b:%d ", report->button);
+        uprintf("x:%d ", report->x);
+        uprintf("y:%d ", report->y);
+        uprintf("v:%d ", report->v);
+        uprintf("h:%d ", report->h);
+        uprintf("undef:%u\n", report->undefined);
+    }
+
+    mouse_send_flag = true;
+
+    report_mouse_t mouse = pointing_device_get_report();
+
+    mouse.buttons = report->button;
+
+    mouse.x += report->x;
+    mouse.y += report->y;
+    mouse.v += report->v;
+    mouse.h += report->h;
+
+    pointing_device_set_report(mouse);
+}
+
+void pointing_device_task(void) {
+    if (mouse_send_flag) {
+        pointing_device_send();
+        mouse_send_flag = false;
+    }
+}
+
+void vendor_report_parser(uint16_t usage_id, hid_report_member_t const* member, uint8_t const* data, uint8_t len) {
+    // For Lenovo thinkpad keyboard(17ef:6047)
+    // TODO: restriction by VID:PID
+    if (usage_id == 0xFFA1) {
+        mouse_parse_result_t mouse = {0};
+        mouse.h                    = (data[0] & 0x80 ? 0xFF00 : 0) | data[0];
+        mouse_report_hook(&mouse);
+    }
+}
+
+__attribute__((weak)) void system_report_hook(uint16_t report) {
+    host_system_send(report);
+    wait_ms(TAP_CODE_DELAY);
+    host_system_send(0);
+}
+
+__attribute__((weak)) void consumer_report_hook(uint16_t report) {
+    host_consumer_send(report);
+    wait_ms(TAP_CODE_DELAY);
+    host_consumer_send(0);
 }
