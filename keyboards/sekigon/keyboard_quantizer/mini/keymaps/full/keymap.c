@@ -10,8 +10,10 @@
 #include "quantizer_mouse.h"
 
 user_config_t user_config;
-
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {{{KC_NO}}};
+
+// To compile keymap_introspection.c, declear combo here
+extern combo_t key_combos[COMBO_LEN_MAX];
 
 int8_t virtser_send_wrap(uint8_t c) {
     virtser_send(c);

@@ -71,6 +71,7 @@ static void td_finished(tap_dance_state_t *state, void *user_data) {
             if (kc != KC_NO) {
                 set_kc_no_remap(kc);
                 action_exec((keyevent_t){.key     = {.row = 0, .col = 0},
+                                         .type    = KEY_EVENT,
                                          .pressed = true,
                                          .time    = (timer_read() | 1)});
                 return;
@@ -94,6 +95,7 @@ static void td_finished(tap_dance_state_t *state, void *user_data) {
             if (kc != KC_NO) {
                 set_kc_no_remap(kc);
                 action_exec((keyevent_t){.key     = {.row = 0, .col = 0},
+                                         .type    = KEY_EVENT,
                                          .pressed = true,
                                          .time    = (timer_read() | 1)});
                 return;
@@ -122,6 +124,7 @@ static void td_reset(tap_dance_state_t *state, void *user_data) {
             if (kc != KC_NO) {
                 set_kc_no_remap(kc);
                 action_exec((keyevent_t){.key     = {.row = 0, .col = 0},
+                                         .type    = KEY_EVENT,
                                          .pressed = false,
                                          .time    = (timer_read() | 1)});
                 return;
@@ -144,6 +147,7 @@ static void td_reset(tap_dance_state_t *state, void *user_data) {
             if (kc != KC_NO) {
                 set_kc_no_remap(kc);
                 action_exec((keyevent_t){.key     = {.row = 0, .col = 0},
+                                         .type    = KEY_EVENT,
                                          .pressed = false,
                                          .time    = (timer_read() | 1)});
                 return;
@@ -185,6 +189,7 @@ void dynamic_tap_dance_task(void) {
             ridx                    = (ridx + 1) & (DEFFERED_EVENT_CNT - 1);
 
             action_exec((keyevent_t){.key     = {.row = 0, .col = 0},
+                                     .type    = KEY_EVENT,
                                      .pressed = pressed,
                                      .time    = (timer_read() | 1)});
         }

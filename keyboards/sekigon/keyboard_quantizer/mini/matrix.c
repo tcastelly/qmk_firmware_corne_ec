@@ -195,11 +195,14 @@ __attribute__((weak)) void mouse_report_hook(mouse_parse_result_t const* report)
     pointing_device_set_report(mouse);
 }
 
-void pointing_device_task(void) {
+bool pointing_device_task(void) {
     if (mouse_send_flag) {
-        pointing_device_send();
+        bool send_report = pointing_device_send();
         mouse_send_flag = false;
+        return send_report;
     }
+
+    return false;
 }
 
 void vendor_report_parser(uint16_t usage_id, hid_report_member_t const* member, uint8_t const* data, uint8_t len) {

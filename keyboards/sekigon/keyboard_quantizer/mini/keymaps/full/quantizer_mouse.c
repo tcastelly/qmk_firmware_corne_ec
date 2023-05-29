@@ -107,8 +107,8 @@ void mouse_report_hook(mouse_parse_result_t const* report) {
         key.row           = MATRIX_MSWHEEL_ROW;
         key.col           = report->v > 0 ? MATRIX_MSWHEEL_COL : MATRIX_MSWHEEL_COL + 1;
         is_encoder_action = true;
-        action_exec((keyevent_t){.key = key, .pressed = true, .time = (timer_read() | 1)});
-        action_exec((keyevent_t){.key = key, .pressed = false, .time = (timer_read() | 1)});
+        action_exec((keyevent_t){.key = key, .type = KEY_EVENT, .pressed = true, .time = (timer_read() | 1)});
+        action_exec((keyevent_t){.key = key, .type = KEY_EVENT, .pressed = false, .time = (timer_read() | 1)});
         is_encoder_action = false;
     }
 
@@ -118,8 +118,8 @@ void mouse_report_hook(mouse_parse_result_t const* report) {
         key.row           = MATRIX_MSWHEEL_ROW;
         key.col           = report->h > 0 ? MATRIX_MSWHEEL_COL + 2 : MATRIX_MSWHEEL_COL + 3;
         is_encoder_action = true;
-        action_exec((keyevent_t){.key = key, .pressed = true, .time = (timer_read() | 1)});
-        action_exec((keyevent_t){.key = key, .pressed = false, .time = (timer_read() | 1)});
+        action_exec((keyevent_t){.key = key, .type = KEY_EVENT, .pressed = true, .time = (timer_read() | 1)});
+        action_exec((keyevent_t){.key = key, .type = KEY_EVENT, .pressed = false, .time = (timer_read() | 1)});
         is_encoder_action = false;
     }
 

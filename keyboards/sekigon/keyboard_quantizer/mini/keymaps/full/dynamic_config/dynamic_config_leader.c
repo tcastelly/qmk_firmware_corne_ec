@@ -42,11 +42,13 @@ void process_dynamic_config_leader_task(void) {
                     leading = false;
                     set_kc_no_remap(p_leader->keycode);
                     action_exec((keyevent_t){.key     = {.row = 0, .col = 0},
+                                             .type    = KEY_EVENT,
                                              .pressed = true,
                                              .time    = (timer_read() | 1)});
 
                     set_kc_no_remap(p_leader->keycode);
                     action_exec((keyevent_t){.key     = {.row = 0, .col = 0},
+                                             .type    = KEY_EVENT,
                                              .pressed = false,
                                              .time    = (timer_read() | 1)});
 
