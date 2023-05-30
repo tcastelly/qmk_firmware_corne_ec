@@ -28,10 +28,6 @@ static uint16_t get_default_keycode(uint8_t row, uint8_t col) {
     return KC_NO;
 }
 
-__attribute__((weak)) uint16_t keymap_to_keycode_hook(uint16_t keycode) {
-    return keycode;
-}
-
 // override keymap_key_to_keycode
 uint16_t keymap_key_to_keycode(uint8_t layer, keypos_t key) {
     uint16_t keypos = key.row * MATRIX_COLS + key.col;
@@ -56,8 +52,7 @@ uint16_t keymap_key_to_keycode(uint8_t layer, keypos_t key) {
             int              keylen   = p_keymap->keys_len;
             for (int key = 0; key < keylen; key++) {
                 if (p_keymap->p_map[key].from == default_keycode) {
-                    uint16_t keycode = p_keymap->p_map[key].to;
-                    return keymap_to_keycode_hook(keycode);
+                    return p_keymap->p_map[key].to;
                 }
             }
         }
@@ -70,11 +65,7 @@ uint16_t keymap_key_to_keycode(uint8_t layer, keypos_t key) {
 #if !defined(TAPPING_TERM_PER_KEY)
 #    error "Option not satisfied"
 #endif
-__attribute__((weak)) void get_tapping_term_hook(uint16_t     keycode,
-                                                 keyrecord_t *record) {}
-
 uint16_t get_tapping_term(uint16_t keycode, keyrecord_t *record) {
-    get_tapping_term_hook(keycode, record);
     for (int idx = 0; idx < p_config->per_key_option_len; idx++) {
         if (p_config->p_per_key_option[idx].key == keycode) {
             return p_config->p_per_key_option[idx].tapping_term;

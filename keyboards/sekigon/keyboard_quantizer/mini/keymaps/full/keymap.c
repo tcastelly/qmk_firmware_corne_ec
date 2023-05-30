@@ -36,6 +36,10 @@ void housekeeping_task_user(void) {
     cli_exec();
 }
 
+bool pre_process_record_user(uint16_t keycode, keyrecord_t *record) {
+    return pre_process_record_mouse(keycode, record);
+}
+
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     bool cont = process_record_dynamic_config(keycode, record) //
                 && process_record_mouse(keycode, record);
@@ -76,14 +80,6 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
 
 void post_process_record_user(uint16_t keycode, keyrecord_t* record) {
     post_process_record_mouse(keycode, record);
-}
-
-uint16_t keymap_to_keycode_hook(uint16_t keycode) {
-    return keymap_to_keycode_hook_mouse(keycode);
-}
-
-void matrix_scan_user(void) {
-    matrix_scan_user_hook_mouse();
 }
 
  void eeconfig_init_user(void) {

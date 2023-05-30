@@ -244,14 +244,7 @@ void post_process_record_mouse(uint16_t keycode, keyrecord_t* record) {
     }
 }
 
-void matrix_scan_user_hook_mouse(void) {}
-
-uint16_t keymap_to_keycode_hook_mouse(uint16_t keycode) {
-    return keycode;
-}
-
-void get_tapping_term_hook(uint16_t keycode, keyrecord_t* record) {
-    // Gesture recognition trick
+bool pre_process_record_mouse(uint16_t keycode, keyrecord_t *record) {
     // Start gesture when LT key is pressed
     if (keycode >= QK_LAYER_TAP && keycode <= QK_LAYER_TAP_MAX) {
         if (record->event.pressed && gesture_wait == false) {
@@ -259,5 +252,5 @@ void get_tapping_term_hook(uint16_t keycode, keyrecord_t* record) {
         }
     }
 
-    return;
+    return true;
 }
