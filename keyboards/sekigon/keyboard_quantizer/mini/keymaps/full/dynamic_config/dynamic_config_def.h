@@ -5,7 +5,7 @@
 #include <stdint.h>
 #include "process_key_override.h"
 
-#define DYNAMIC_CONFIG_DEF_VERSION 9
+#define DYNAMIC_CONFIG_DEF_VERSION 10
 
 typedef struct {
     uint16_t from;
@@ -100,6 +100,9 @@ typedef struct {
     uint16_t const          crc16; 
     uint32_t const          body_length; 
     // body
+    uint32_t const          yaml_len;
+    uint8_t const          *p_yaml;
+    // ↑ Do not change these definitions
     default_values_t const  default_values;
     uint32_t const          app_len;
     application_t const    *p_app;
@@ -109,8 +112,6 @@ typedef struct {
     per_key_option_t const *p_per_key_option;
     uint32_t const          macro_len;
     dmacro_t const         *p_macro;
-    uint32_t const          yaml_len;
-    uint8_t const          *p_yaml;
 } config_t;
 
 #define CONFIG_ADDR 0x10100000
