@@ -269,6 +269,10 @@ function backupConfig($p) {
     $p.WriteLine("backup")
     $p.ReadLine()
     Write-Host "backup config file..."
+
+    $notify.BalloonTipText = "Start config file backup"
+    $notify.ShowBalloonTip(5000)
+
     $receivedData = New-Object System.IO.MemoryStream
     $buffer = New-Object byte[] $p.ReadBufferSize
     $stopWatch = New-Object System.Diagnostics.Stopwatch
@@ -290,10 +294,12 @@ function backupConfig($p) {
         }
         Start-Sleep -Milliseconds 200
     }
+    $notify.BalloonTipText = "Complete config file backup"
+    $notify.ShowBalloonTip(5000)
 }
 
 # Load config file to keyboard quantizer
-function loadConfig($p) {
+function loadConfig($p, $notify) {
     $file = SelectConfigFile($false)
 
     if ($null -eq $file) {
@@ -310,6 +316,10 @@ function loadConfig($p) {
         # Send load command
         $p.WriteLine("load " + $fileBytes.Length)
         $p.ReadLine()
+
+        $notify.BalloonTipText = "Start loading config file"
+        $notify.ShowBalloonTip(5000)
+
         Start-Sleep -Milliseconds 200
         Write-Host "load config file..."
         $startIndex = 0
@@ -325,9 +335,68 @@ function loadConfig($p) {
             # Wait hand shake
             Write-Host $p.ReadExisting()
         }
+
+        $notify.BalloonTipText = "Complete loading config file"
+        $notify.ShowBalloonTip(5000)
     }
     catch {
         Write-Host $_
+        $notify.BalloonTipText = "Failed to load config file"
+        $notify.ShowBalloonTip(5000)
+    }
+}
+
+# Show file select dialog and return selected file path
+function SelectFirmwareFile() {
+    $f = New-Object System.Windows.Forms.Form
+    $f.TopMost = $true
+    $dialog = New-Object System.Windows.Forms.OpenFileDialog
+    $dialog.Filter = "uf2 files (*.uf2)|*.uf2"
+    $result = $dialog.ShowDialog($f);
+    if ($result -eq 'OK') {
+        return $dialog.FileName
+    }
+    else {
+        return $null
+    }
+}
+
+function updateFirmware($p, $notify) {
+    $targetDrive = "RPI-RP2"
+
+    if (!$p.isOpen) {
+        return
+    }
+
+    $file = SelectFirmwareFile
+    if ($null -eq $file) {
+        Write-Host "No config file is selected"
+        return
+    }
+    # $p.ReadTimeout = 1000
+    $p.ReadExisting()
+    # Send dfu command
+    $p.WriteLine("dfu")
+    # port may close
+
+    $notify.BalloonTipText = "Start firmware update"
+    $notify.ShowBalloonTip(5000)
+
+    # Wait until uf2 drive is recognized
+    Start-Sleep -Milliseconds 5000
+
+    $driveQuery = "SELECT * FROM Win32_Volume WHERE DriveType = 2"  
+    $drive = Get-WmiObject -Query $driveQuery | Where-Object { $_.Label -eq $targetDrive }
+
+    if ($drive) {
+        Write-Host "Drive is found"
+        $targetPath = "{0}\{1}" -f $drive.Name, (Split-Path $file -Leaf)
+        Copy-Item -Path $file -Destination $targetPath
+        $notify.BalloonTipText = "Complete firmware update"
+        $notify.ShowBalloonTip(5000)
+    }
+    else {
+        Write-Host "Drive is not found"
     }
 }
 
@@ -360,13 +429,19 @@ $menuExit.Text = "Exit"
 $menuExit.add_Click({ $appContext.ExitThread() })
 $menuBackup = New-Object System.Windows.Forms.ToolStripMenuItem
 $menuBackup.Text = "Backup config from device"
-$menuBackup.add_Click({ try { backupConfig($p) }catch {} })
+$menuBackup.add_Click({ try { backupConfig $p $notify } catch { Write-Host $_ } })
 $menuLoad = New-Object System.Windows.Forms.ToolStripMenuItem
 $menuLoad.Text = "Load config to device"
-$menuLoad.add_Click({ try { loadConfig($p) }catch {} })
+$menuLoad.add_Click({ try { loadConfig $p $notify } catch { Write-Host $_ } })
+$menuUpdate = New-Object System.Windows.Forms.ToolStripMenuItem
+$menuUpdate.Text = "Update firmware of device"
+$menuUpdate.add_Click({ try { updateFirmware $p $notify } catch { Write-Host $_ } })
 $menuSeparator = New-Object System.Windows.Forms.ToolStripSeparator
+$menuSeparator2 = New-Object System.Windows.Forms.ToolStripSeparator
 $notify.ContextMenuStrip = New-Object System.Windows.Forms.ContextMenuStrip
-$notify.ContextMenuStrip.Items.AddRange(($menuBackup, $menuLoad, $menuSeparator, $menuExit))
+$notify.ContextMenuStrip.Items.AddRange(($menuBackup, $menuLoad, $menuSeparator, $menuUpdate, $menuSeparator2, $menuExit))
+$menuGroup = ($menuBackup, $menuLoad, $menuUpdate)
+$menuGroup.ForEach({$_.Enabled = $false})
 
 $matcher = New-Object ApplicationMatcher
 
@@ -375,6 +450,7 @@ $global:portOpen = $false
 $timer = New-Object Windows.Forms.Timer;
 $timer.add_Tick({
         $timer.Stop()
+        $nextInterval = 100
 
         try {
             CheckActiveWindow($p)
@@ -408,6 +484,7 @@ $timer.add_Tick({
         else {
             if ($global:portOpen) {
                 Write-Host "Close port"
+                $menuGroup.ForEach({$_.Enabled = $false})
                 $notify.BalloonTipText = "Serial port is closed"
                 $notify.ShowBalloonTip(5000)
             }
@@ -422,6 +499,7 @@ $timer.add_Tick({
                 $reader = New-Object System.IO.StreamReader($stream, [System.Text.Encoding]::UTF8)
 
                 Write-Host "Open port"
+                $menuGroup.ForEach({$_.Enabled = $true})
                 $notify.BalloonTipText = "Serial port is opened"
                 $notify.ShowBalloonTip(5000)
 
@@ -439,11 +517,11 @@ $timer.add_Tick({
                 }
             }
             catch {
-                Start-Sleep -Seconds 1
+                $nextInterval = 1000
             }
         }
 
-        $timer.Interval = 100
+        $timer.Interval = $nextInterval
         $timer.Start()
     })
 

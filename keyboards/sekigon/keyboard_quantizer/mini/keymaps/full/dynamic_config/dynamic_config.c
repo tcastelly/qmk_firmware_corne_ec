@@ -191,7 +191,7 @@ __asm__(".section .rodata\n"
         ".balign 4\n"
         ".global companion_app\n"
         "companion_app:\n"
-        ".incbin \"companion.ps1\"\n"
+        ".incbin \"quantizer_companion.ps1\"\n"
         ".balign 1\n"
         "_end_companion_app:\n"
         ".byte 0\n" // null termination
