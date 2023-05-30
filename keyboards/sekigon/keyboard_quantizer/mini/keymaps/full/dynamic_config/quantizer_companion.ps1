@@ -445,6 +445,7 @@ $menuGroup.ForEach({$_.Enabled = $false})
 
 $matcher = New-Object ApplicationMatcher
 
+$global:reader = New-Object PSObject
 $global:portOpen = $false
 
 $timer = New-Object Windows.Forms.Timer;
@@ -464,7 +465,7 @@ $timer.add_Tick({
             try {
                 $p.ReadTimeout = 1
                 # If some data is received, print it
-                $line = $reader.ReadLine()
+                $line = $global:reader.ReadLine()
                 Write-Host $line
                 # If received data is command from keyboard quantizer, execute it
                 if ($line -match "^(>?\s*)command:\s*(.+)") {
@@ -496,7 +497,7 @@ $timer.add_Tick({
                 $p.ReadTimeout = 1000
 
                 $stream = $p.BaseStream
-                $reader = New-Object System.IO.StreamReader($stream, [System.Text.Encoding]::UTF8)
+                $global:reader = New-Object System.IO.StreamReader($stream, [System.Text.Encoding]::UTF8)
 
                 Write-Host "Open port"
                 $menuGroup.ForEach({$_.Enabled = $true})
@@ -507,8 +508,8 @@ $timer.add_Tick({
                 $p.WriteLine("") # discard current command
                 $p.ReadExisting()
                 $p.WriteLine("app")
-                $reader.ReadLine() # discard echo back
-                $line = $reader.ReadLine() # get app string
+                $global:reader.ReadLine() # discard echo back
+                $line = $global:reader.ReadLine() # get app string
                 $apps = $line | ConvertFrom-Json
                 Write-Host $apps.app
                 # Set applicaton list to application matcher
