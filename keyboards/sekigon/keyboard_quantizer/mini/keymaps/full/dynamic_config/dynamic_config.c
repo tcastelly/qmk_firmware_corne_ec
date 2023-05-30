@@ -122,7 +122,7 @@ void set_active_apps(uint8_t *p_apps, uint8_t len) {
 
 void dynamic_config_init(void) {
     const config_t *config_rom = (config_t *)CONFIG_ADDR;
-    if (config_rom->magic == default_config.magic && config_rom->version == default_config.version) {
+    if (config_rom->magic == default_config.magic && config_rom->version == default_config.version && config_rom->body_length <= CONFIG_MAX_LEN - 12) {
         if (config_rom->crc16 == calc_usb_crc16((const uint8_t *)&config_rom->yaml_len, config_rom->body_length)) {
             p_config = config_rom;
         }

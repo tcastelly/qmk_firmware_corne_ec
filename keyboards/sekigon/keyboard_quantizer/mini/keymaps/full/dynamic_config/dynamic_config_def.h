@@ -115,6 +115,7 @@ typedef struct {
 } config_t;
 
 #define CONFIG_ADDR 0x10100000
+#define CONFIG_MAX_LEN 0x000f0000
 
 extern const uint8_t *p_active_app_cnt;
 extern const uint8_t *p_active_apps;
