@@ -56,9 +56,9 @@ void activate_override(void) {
         append_us_key_on_jp_os_overrides();
     }
 
-    uint8_t app_cnt = *p_active_app_cnt;
+    int16_t app_cnt = *p_active_app_cnt;
 
-    for (int app = MAX(0, app_cnt - 1); app >= 0; app--) {
+    for (int app = app_cnt - 1; app >= 0; app--) {
         if (p_active_apps[app] >= p_config->app_len) break;
 
         const application_t *p_app        = &p_config->p_app[p_active_apps[app]];

@@ -5,6 +5,7 @@
 #include "full.h"
 
 #include "virtser.h"
+#include "os_detection.h"
 #include "cli.h"
 #include "dynamic_config.h"
 #include "quantizer_mouse.h"
@@ -32,6 +33,12 @@ void keyboard_post_init_user(void) {
 }
 
 void housekeeping_task_user(void) {
+    static os_variant_t detected_os = OS_UNSURE;
+    if (detected_os != detected_host_os()) {
+        dynamic_config_activate_default_apps();
+        detected_os = detected_host_os();
+    }
+
     dynamic_config_task();
     cli_exec();
 }

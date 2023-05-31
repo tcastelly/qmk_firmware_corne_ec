@@ -6,7 +6,7 @@
 #include <stdint.h>
 #include "action.h"
 
-#define ACTIVE_MODE_LEN 32
+#define ACTIVE_APP_CNT_MAX 32
 #define COMBO_LEN_MAX 128
 #define TAPDANCE_LEN_MAX 128
 
@@ -18,6 +18,7 @@ typedef enum {
 void print_config(void);
 void print_app(void);
 void dynamic_config_init(void);
+void dynamic_config_activate_default_apps(void);
 void set_active_apps(uint8_t *p_apps, uint8_t len);
 bool process_record_dynamic_config(uint16_t keycode, keyrecord_t *record);
 void set_kc_no_remap(uint16_t kc);

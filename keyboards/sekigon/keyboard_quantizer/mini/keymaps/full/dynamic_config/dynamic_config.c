@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include "quantum.h"
 #include "virtser.h"
+#include "os_detection.h"
 
 #include "dynamic_config_def.h"
 #include "dynamic_config.h"
@@ -17,8 +18,8 @@
 
 extern uint16_t calc_usb_crc16(const uint8_t *data, uint16_t len); // #include "usb_crc.h"
 
-static uint8_t       active_apps[ACTIVE_MODE_LEN];
-static uint8_t       active_app_cnt = 1;
+static uint8_t       active_apps[ACTIVE_APP_CNT_MAX];
+static int16_t       active_app_cnt;
 static LANGUAGE_TYPE keyboard_language;
 static LANGUAGE_TYPE os_language;
 
@@ -33,7 +34,7 @@ const config_t  default_config = {.magic          = 0x999b999b,
                                  }};
 const config_t *p_config       = &default_config;
 
-const uint8_t *p_active_app_cnt = &active_app_cnt;
+const int16_t *p_active_app_cnt = &active_app_cnt;
 const uint8_t *p_active_apps    = active_apps;
 
 void print_config(void) {
@@ -45,6 +46,7 @@ void print_config(void) {
         printf("title:%s\n", p_config->p_app[app].p_title ? p_config->p_app[app].p_title : "");
         printf("process:%s\n", p_config->p_app[app].p_process ? p_config->p_app[app].p_process : "");
         printf("url:%s\n", p_config->p_app[app].p_url ? p_config->p_app[app].p_url : "");
+        printf("os_variant:%d\n", p_config->p_app[app].os_variant);
         for (int layer = 0; layer < p_config->p_app[app].keymap_len; layer++) {
             printf("\tlayer: %d\n", p_config->p_app[app].p_keymap[layer].layer);
             for (int key = 0; key < p_config->p_app[app].p_keymap[layer].keys_len; key++) {
@@ -105,16 +107,22 @@ void print_app(void) {
     printf("]}\n");
 }
 
-void set_active_apps(uint8_t *p_apps, uint8_t len) {
-    if (len > ACTIVE_MODE_LEN) {
-        len = ACTIVE_MODE_LEN;
+void set_active_apps(uint8_t *app_indexes, uint8_t len) {
+    if (len > ACTIVE_APP_CNT_MAX) {
+        len = ACTIVE_APP_CNT_MAX;
     }
 
+    active_app_cnt = 0;
     for (int idx = 0; idx < len; idx++) {
-        active_apps[idx] = p_apps[idx];
+        const application_t *p_app = &p_config->p_app[app_indexes[idx]];
+        if (p_app->os_variant != 0 && p_app->os_variant != detected_host_os()) continue;
+        active_apps[active_app_cnt++] = app_indexes[idx];
         dprintf("activate app:%02x\n", active_apps[idx]);
+
+        if (active_app_cnt == ACTIVE_APP_CNT_MAX) {
+            break;
+        }
     }
-    active_app_cnt = len;
 
     activate_combos();
     activate_override();
@@ -128,11 +136,30 @@ void dynamic_config_init(void) {
         }
     }
 
-    uint8_t apps[] = {0};
-    set_active_apps(apps, 1);
+    dynamic_config_activate_default_apps();
+
     activate_tap_dances();
     set_keyboard_language(p_config->default_values.keyboard_language);
     set_os_language(p_config->default_values.os_language);
+}
+
+void dynamic_config_activate_default_apps(void) {
+    // call after os detection completed
+    active_app_cnt = 0;
+    for (int app = 0; app < p_config->app_len; app++) {
+        if (p_config->p_app[app].p_title == NULL && p_config->p_app[app].p_process == NULL && p_config->p_app[app].p_url == NULL) {
+            const application_t *p_app = &p_config->p_app[app];
+            if (p_app->os_variant != 0 && p_app->os_variant != detected_host_os()) continue;
+            active_apps[active_app_cnt++] = app;
+            dprintf("activate app:%02x\n", active_apps[active_app_cnt - 1]);
+            if (active_app_cnt >= ACTIVE_APP_CNT_MAX) {
+                break;
+            }
+        }
+    }
+
+    activate_combos();
+    activate_override();
 }
 
 void dynamic_config_task(void) {

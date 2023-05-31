@@ -38,7 +38,7 @@ uint16_t keymap_key_to_keycode(uint8_t layer, keypos_t key) {
 
     // Search for the keymap starting from the bottom of the configuration
     // settings. Settings written in the bottom takes priority
-    for (int app = MAX(0, (int16_t)*p_active_app_cnt - 1); app >= 0; app--) {
+    for (int app = (int16_t)*p_active_app_cnt - 1; app >= 0; app--) {
         if (p_active_apps[app] >= p_config->app_len) break;
 
         const application_t *p_app      = &p_config->p_app[p_active_apps[app]];

@@ -29,7 +29,7 @@ void process_dynamic_config_leader_task(void) {
     if (leading) {
         int16_t app_cnt           = *p_active_app_cnt;
         bool    any_active_leader = false;
-        for (int app = MAX(0, app_cnt - 1); app >= 0; app--) {
+        for (int app = app_cnt - 1; app >= 0; app--) {
             if (p_active_apps[app] >= p_config->app_len) break;
 
             const application_t *p_app = &p_config->p_app[p_active_apps[app]];

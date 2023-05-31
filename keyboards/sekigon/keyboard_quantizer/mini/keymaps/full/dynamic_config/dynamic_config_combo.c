@@ -56,7 +56,7 @@ void activate_combos(void) {
 
     // Add combo from the top of the configuration settings.
     // Settings written in the bottom takes priority
-    for (int app = 0; app < MAX(1, *p_active_app_cnt); app++) {
+    for (int app = 0; app < *p_active_app_cnt; app++) {
         if (p_active_apps[app] >= p_config->app_len) break;
 
         const application_t *p_app     = &p_config->p_app[p_active_apps[app]];
