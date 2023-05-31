@@ -11,21 +11,11 @@ static uint16_t kc_no_remap = KC_NO;
 void set_kc_no_remap(uint16_t kc) { kc_no_remap = kc; }
 
 static uint16_t get_default_keycode(uint8_t row, uint8_t col) {
-    if (row < MATRIX_MODIFIER_ROW) {
+    if (row != MATRIX_MSGES_ROW) {
         return row * MATRIX_COLS + col;
-    } else if (row == MATRIX_MODIFIER_ROW) {
-        return KC_LCTL + col;
-    } else if (row == MATRIX_MSBTN_ROW) {
-        return KC_BTN1 + col;
-    } else if (row == MATRIX_MSGES_ROW) {
-        if (col < MATRIX_MSWHEEL_COL) {
-            return QK_KB_0 + col;
-        } else {
-            return KC_MS_WH_UP + col - MATRIX_MSWHEEL_COL;
-        }
+    } else {
+        return QK_KB_0 + col;
     }
-
-    return KC_NO;
 }
 
 // override keymap_key_to_keycode

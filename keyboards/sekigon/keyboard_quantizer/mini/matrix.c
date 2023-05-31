@@ -4,13 +4,13 @@
 #include QMK_KEYBOARD_H
 
 #include "print.h"
+
 #include "tusb.h"
 #include "pio_usb_ll.h"
 #include "report_descriptor_parser.h"
 #include "report_parser.h"
 
 matrix_row_t*           matrix_dest;
-matrix_row_t*           matrix_mouse_dest;
 bool                    mouse_send_flag = false;
 static uint8_t          kbd_addr;
 static uint8_t          kbd_instance;
@@ -22,7 +22,6 @@ static bool             hid_disconnect_flag;
 static uint8_t          pre_keyreport[8];
 #define LED_BLINK_TIME_MS 50
 #define KQ_PIN_LED 7
-#define MATRIX_MODIFIER_ROW 21
 #define MATRIX_MSBTN_ROW 22
 
 extern void busy_wait_us(uint64_t delay_us);
@@ -55,7 +54,6 @@ bool matrix_scan_custom(matrix_row_t current_matrix[]) {
     if (hid_report_size > 0) {
         hid_report_size    = 0;
         matrix_dest        = current_matrix;
-        matrix_mouse_dest  = &current_matrix[MATRIX_MSBTN_ROW];
         matrix_has_changed = parse_report(hid_instance, hid_report_buffer, hid_report_size);
         return matrix_has_changed;
     } else {
@@ -167,7 +165,7 @@ __attribute__((weak)) void keyboard_report_hook(keyboard_parse_result_t const* r
     }
 
     // copy modifier bits
-    matrix_dest[MATRIX_MODIFIER_ROW] = report->bits[28];
+    matrix_dest[KC_LEFT_CTRL / 8] = report->bits[28];
 }
 
 __attribute__((weak)) void mouse_report_hook(mouse_parse_result_t const* report) {

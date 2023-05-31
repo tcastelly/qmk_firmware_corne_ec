@@ -14,7 +14,7 @@ typedef enum {
 } gesture_id_t;
 
 extern bool          matrix_has_changed;
-extern matrix_row_t* matrix_mouse_dest;
+extern matrix_row_t* matrix_dest;
 extern bool          is_encoder_action;
 extern bool          mouse_send_flag;
 
@@ -96,7 +96,13 @@ void mouse_report_hook(mouse_parse_result_t const* report) {
     // 8 button mouse is assumed
     //
     uint8_t button_current = report->button;
-    matrix_mouse_dest[0]   = button_current;
+    for (int bit = 0; bit < 8 * sizeof(button_current); bit++) {
+        if (button_current & (1 << bit)) {
+            matrix_dest[(KC_MS_BTN1 + bit) / 8] |= (1 << ((KC_MS_BTN1 + bit) & 0x07));
+        } else {
+            matrix_dest[(KC_MS_BTN1 + bit) / 8] &= ~(1 << ((KC_MS_BTN1 + bit) & 0x07));
+        }
+    }
 
     //
     // Assign wheel to key action
@@ -104,8 +110,9 @@ void mouse_report_hook(mouse_parse_result_t const* report) {
     if (report->v != 0) {
         keypos_t key;
         wheel_move_v      = report->v;
-        key.row           = MATRIX_MSWHEEL_ROW;
-        key.col           = report->v > 0 ? MATRIX_MSWHEEL_COL : MATRIX_MSWHEEL_COL + 1;
+        uint16_t kc       = report->v > 0 ? KC_MS_WH_UP : KC_MS_WH_DOWN;
+        key.row           = kc >> 3;
+        key.col           = kc & 0x07;
         is_encoder_action = true;
         action_exec((keyevent_t){.key = key, .type = KEY_EVENT, .pressed = true, .time = (timer_read() | 1)});
         action_exec((keyevent_t){.key = key, .type = KEY_EVENT, .pressed = false, .time = (timer_read() | 1)});
@@ -115,8 +122,9 @@ void mouse_report_hook(mouse_parse_result_t const* report) {
     if (report->h != 0) {
         keypos_t key;
         wheel_move_h      = report->h;
-        key.row           = MATRIX_MSWHEEL_ROW;
-        key.col           = report->h > 0 ? MATRIX_MSWHEEL_COL + 2 : MATRIX_MSWHEEL_COL + 3;
+        uint16_t kc       = report->h > 0 ? KC_MS_WH_LEFT : KC_MS_WH_RIGHT;
+        key.row           = kc >> 3;
+        key.col           = kc & 0x07;
         is_encoder_action = true;
         action_exec((keyevent_t){.key = key, .type = KEY_EVENT, .pressed = true, .time = (timer_read() | 1)});
         action_exec((keyevent_t){.key = key, .type = KEY_EVENT, .pressed = false, .time = (timer_read() | 1)});
