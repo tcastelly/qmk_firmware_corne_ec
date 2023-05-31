@@ -36,6 +36,8 @@ uint16_t keymap_key_to_keycode(uint8_t layer, keypos_t key) {
 
     uint16_t default_keycode = get_default_keycode(key.row, key.col);
 
+    if (layer >= MAX_LAYER) return default_keycode;
+
     // Search for the keymap starting from the bottom of the configuration
     // settings. Settings written in the bottom takes priority
     for (int app = (int16_t)*p_active_app_cnt - 1; app >= 0; app--) {

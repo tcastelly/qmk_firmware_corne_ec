@@ -45,6 +45,13 @@ bool combo_should_trigger(uint16_t index, combo_t *combo, uint16_t keycode, keyr
     return ((1 << layer) & dcombos[index]->layer) != 0;
 }
 
+#if defined(COMBO_ONLY_FROM_LAYER)
+#    error "Option not satisfied"
+#endif
+uint8_t combo_ref_from_layer(uint8_t layer) {
+    return 0xff;
+}
+
 void activate_combos(void) {
     bool restore_combo_enable = is_combo_enabled();
     combo_disable();
