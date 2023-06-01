@@ -10,23 +10,8 @@ static uint16_t kc_no_remap = KC_NO;
 
 void set_kc_no_remap(uint16_t kc) { kc_no_remap = kc; }
 
-static uint16_t get_default_keycode(uint8_t row, uint8_t col) {
-    if (row != MATRIX_MSGES_ROW) {
-        return row * MATRIX_COLS + col;
-    } else {
-        return QK_KB_0 + col;
-    }
-}
-
-// override keymap_key_to_keycode
-uint16_t keymap_key_to_keycode(uint8_t layer, keypos_t key) {
-    uint16_t keypos = key.row * MATRIX_COLS + key.col;
-
-    if (keypos == 0) return kc_no_remap;
-
-    uint16_t default_keycode = get_default_keycode(key.row, key.col);
-
-    if (layer >= MAX_LAYER) return default_keycode;
+uint16_t dynamic_config_keymap_keycode_to_keycode(uint8_t layer, uint16_t keycode) {
+    if (layer >= MAX_LAYER) return keycode;
 
     // Search for the keymap starting from the bottom of the configuration
     // settings. Settings written in the bottom takes priority
@@ -43,14 +28,21 @@ uint16_t keymap_key_to_keycode(uint8_t layer, keypos_t key) {
             const dkeymap_t *p_keymap = &p_app->p_keymap[km];
             int              keylen   = p_keymap->keys_len;
             for (int key = 0; key < keylen; key++) {
-                if (p_keymap->p_map[key].from == default_keycode) {
+                if (p_keymap->p_map[key].from == keycode) {
                     return p_keymap->p_map[key].to;
                 }
             }
         }
     }
 
-    return layer == 0 ? get_default_keycode(key.row, key.col) : KC_TRNS;
+    return layer == 0 ? keycode : KC_TRNS;
+}
+
+// override keymap_key_to_keycode
+uint16_t keymap_key_to_keycode(uint8_t layer, keypos_t key) {
+    if (key.row == 0 && key.col == 0) return kc_no_remap;
+
+    return dynamic_config_keymap_keycode_to_keycode(layer, key.row * MATRIX_COLS + key.col);
 }
 
 

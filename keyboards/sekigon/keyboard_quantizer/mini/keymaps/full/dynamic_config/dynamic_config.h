@@ -21,6 +21,7 @@ void dynamic_config_init(void);
 void dynamic_config_activate_default_apps(void);
 void set_active_apps(uint8_t *p_apps, uint8_t len);
 bool process_record_dynamic_config(uint16_t keycode, keyrecord_t *record);
+uint16_t dynamic_config_keymap_keycode_to_keycode(uint8_t layer, uint16_t keycode);
 void set_kc_no_remap(uint16_t kc);
 void dynamic_config_task(void);
 void print_companion_app(void);

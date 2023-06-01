@@ -4,6 +4,7 @@
 #include QMK_KEYBOARD_H
 
 #include "report_parser.h"
+#include "dynamic_config.h"
 
 typedef enum {
     GESTURE_NONE = 0,
@@ -68,12 +69,29 @@ gesture_id_t recognize_gesture(int16_t x, int16_t y) {
     return gesture_id;
 }
 
+static uint16_t get_remapped_keycode_from_keycode(uint16_t keycode) {
+    for (uint16_t layer = 15; layer > 0; layer--) {
+        if (layer_state & (1 << layer)) {
+            uint16_t kc = dynamic_config_keymap_keycode_to_keycode(layer, keycode);
+            if (kc != KC_TRNS) {
+                return kc;
+            }
+        }
+    }
+
+    return dynamic_config_keymap_keycode_to_keycode(0, keycode);
+}
+
 void process_gesture(uint8_t layer, gesture_id_t gesture_id) {
     switch (gesture_id) {
         case GESTURE_DOWN_RIGHT ... GESTURE_UP_RIGHT: {
-            keypos_t keypos  = {.row = MATRIX_MSGES_ROW, .col = gesture_id - 1};
-            uint16_t keycode = keymap_key_to_keycode(layer, keypos);
-            tap_code16(keycode);
+            uint16_t keycode = dynamic_config_keymap_keycode_to_keycode(layer, QK_KB_0 + gesture_id - GESTURE_DOWN_RIGHT);
+            if (keycode == QK_KB_0 + gesture_id - GESTURE_DOWN_RIGHT) {
+                return;
+            }
+            set_kc_no_remap(keycode);
+            action_exec((keyevent_t){.key = {.row = 0, .col = 0}, .type = KEY_EVENT, .pressed = true, .time = (timer_read() | 1)});
+            action_exec((keyevent_t){.key = {.row = 0, .col = 0}, .type = KEY_EVENT, .pressed = false, .time = (timer_read() | 1)});
         } break;
         default:
             break;
@@ -151,8 +169,27 @@ void mouse_report_hook(mouse_parse_result_t const* report) {
         y_rem = 0;
     }
 
-    mouse.x += x;
-    mouse.y += y;
+    if (x != 0) {
+        uint16_t ms_left_map = get_remapped_keycode_from_keycode(KC_MS_LEFT);
+        if (ms_left_map == KC_MS_LEFT) {
+            mouse.x += x;
+        } else if (ms_left_map == KC_MS_WH_LEFT) {
+            mouse.h += (x > 0) ? 1 : -1;
+        } else if (ms_left_map == KC_MS_WH_RIGHT) {
+            mouse.h += (x > 0) ? -1 : 1;
+        }
+    }
+
+    if (y != 0) {
+        uint16_t ms_up_map = get_remapped_keycode_from_keycode(KC_MS_UP);
+        if (ms_up_map == KC_MS_UP) {
+            mouse.y += y;
+        } else if (ms_up_map == KC_MS_WH_UP) {
+            mouse.v += (y > 0) ? -1 : 1;
+        } else if (ms_up_map == KC_MS_WH_DOWN) {
+            mouse.v += (y > 0) ? 1 : -1;
+        }
+    }
 
     pointing_device_set_report(mouse);
 
