@@ -26,9 +26,11 @@ void virtser_recv(uint8_t c) {
 
 static void writeChar(EmbeddedCli *_, char c) { printf("%c", c); }
 
+static void onVersion(EmbeddedCli *cli, char *args, void *context) {
+    printf("firmware version: %s\n", STR(GIT_DESCRIBE));
+}
+
 static void onConfig(EmbeddedCli *cli, char *args, void *context) {
-    // uint16_t size = embeddedCliRequiredSize(config);
-    // printf("%d bytes \n", size);
     print_config();
 }
 
@@ -97,6 +99,9 @@ void cli_init(void) {
     config->maxBindingCount    = 16;
     cli                        = embeddedCliNew(config);
     cli->writeChar             = writeChar;
+    embeddedCliAddBinding(
+        cli, (CliCommandBinding){"version", "Show version", false, NULL,
+                                 onVersion});
     embeddedCliAddBinding(
         cli, (CliCommandBinding){"app", "Read application list", false, NULL,
                                  onApp});

@@ -11,3 +11,6 @@ COMBO_ENABLE = yes
 TAP_DANCE_ENABLE = yes
 LEADER_ENABLE = yes
 OS_DETECTION_ENABLE = yes
+
+GIT_DESCRIBE := $(shell git describe --tags --long --dirty="\\*" 2>/dev/null)
+CFLAGS += -DGIT_DESCRIBE=$(GIT_DESCRIBE)
