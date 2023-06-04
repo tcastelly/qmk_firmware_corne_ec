@@ -33,6 +33,7 @@ const config_t  default_config = {.magic          = 0x999b999b,
                                       .retro_tapping           = false,
                                  }};
 const config_t *p_config       = &default_config;
+static const config_t *config_rom     = (config_t *)CONFIG_ADDR;
 
 const int16_t *p_active_app_cnt = &active_app_cnt;
 const uint8_t *p_active_apps    = active_apps;
@@ -128,12 +129,16 @@ void set_active_apps(uint8_t *app_indexes, uint8_t len) {
     activate_override();
 }
 
+static bool is_config_rom_valid_crc(void)
+{
+    return config_rom->magic == default_config.magic &&      //
+           config_rom->body_length <= CONFIG_MAX_LEN - 12 && //
+           config_rom->crc16 == calc_usb_crc16((const uint8_t *)&config_rom->yaml_len, config_rom->body_length);
+}
+
 void dynamic_config_init(void) {
-    const config_t *config_rom = (config_t *)CONFIG_ADDR;
-    if (config_rom->magic == default_config.magic && config_rom->version == default_config.version && config_rom->body_length <= CONFIG_MAX_LEN - 12) {
-        if (config_rom->crc16 == calc_usb_crc16((const uint8_t *)&config_rom->yaml_len, config_rom->body_length)) {
-            p_config = config_rom;
-        }
+    if (config_rom->version == default_config.version && is_config_rom_valid_crc()) {
+        p_config = config_rom;
     }
 
     dynamic_config_activate_default_apps();
@@ -236,8 +241,13 @@ void print_companion_app(void) {
 }
 
 void send_config_file(void) {
-    for (int idx = 0; idx < p_config->p_yaml + p_config->yaml_len - (uint8_t *)p_config; idx++) {
-        virtser_send(((const uint8_t *)p_config)[idx]);
+    const config_t *p_send_config = p_config;
+    if (p_send_config != config_rom && is_config_rom_valid_crc()) {
+        p_send_config = config_rom;
+    }
+
+    for (int idx = 0; idx < p_send_config->p_yaml + p_send_config->yaml_len - (uint8_t *)p_send_config; idx++) {
+        virtser_send(((const uint8_t *)p_send_config)[idx]);
     }
 }
 
