@@ -22,11 +22,16 @@ void dynamic_config_activate_default_apps(void);
 void set_active_apps(uint8_t *p_apps, uint8_t len);
 bool process_record_dynamic_config(uint16_t keycode, keyrecord_t *record);
 uint16_t dynamic_config_keymap_keycode_to_keycode(uint8_t layer, uint16_t keycode);
-void set_kc_no_remap(uint16_t kc);
 void dynamic_config_task(void);
 void print_companion_app(void);
 void send_config_file(void);
 void send_bootstrap_macro(void);
+
+// Process keycodes by action_exec()
+void    dynamic_config_tap_code(uint16_t kc);
+uint8_t dynamic_config_register_code(uint16_t kc);
+void    dynamic_config_unregister_code_col(uint8_t col);
+void    dynamic_config_unregister_code(uint16_t kc);
 
 // Loading config file
 void cdc_config_load_cb(const uint8_t *buf, uint32_t cnt);

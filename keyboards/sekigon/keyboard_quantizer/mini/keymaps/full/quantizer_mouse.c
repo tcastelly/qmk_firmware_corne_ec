@@ -89,9 +89,7 @@ void process_gesture(uint8_t layer, gesture_id_t gesture_id) {
             if (keycode == QK_KB_0 + gesture_id - GESTURE_DOWN_RIGHT) {
                 return;
             }
-            set_kc_no_remap(keycode);
-            action_exec((keyevent_t){.key = {.row = 0, .col = 0}, .type = KEY_EVENT, .pressed = true, .time = (timer_read() | 1)});
-            action_exec((keyevent_t){.key = {.row = 0, .col = 0}, .type = KEY_EVENT, .pressed = false, .time = (timer_read() | 1)});
+            dynamic_config_tap_code(keycode);
         } break;
         default:
             break;

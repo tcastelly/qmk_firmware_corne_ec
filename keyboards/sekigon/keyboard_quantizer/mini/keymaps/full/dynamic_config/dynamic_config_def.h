@@ -5,7 +5,7 @@
 #include <stdint.h>
 #include "process_key_override.h"
 
-#define DYNAMIC_CONFIG_DEF_VERSION 11
+#define DYNAMIC_CONFIG_DEF_VERSION 12
 
 typedef struct {
     uint16_t from;

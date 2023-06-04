@@ -5,10 +5,50 @@
 #include "dynamic_config_def.h"
 #include "quantum.h"
 
-// use kc_no remap for action injection
-static uint16_t kc_no_remap = KC_NO;
+// use keycodes 0-3 remap for action injection
+#define KC_NO_REMAP_SIZE 4
+static uint16_t kc_no_remap[KC_NO_REMAP_SIZE] = {KC_NO};
 
-void set_kc_no_remap(uint16_t kc) { kc_no_remap = kc; }
+static uint8_t set_kc_no_remap(uint16_t kc) {
+    for (int col = 0; col < KC_NO_REMAP_SIZE; col++) {
+        if (kc_no_remap[col] == KC_NO) {
+            kc_no_remap[col] = kc;
+            return col;
+        }
+    }
+    return 0xff;
+}
+
+void dynamic_config_tap_code(uint16_t kc) {
+    uint8_t col = set_kc_no_remap(kc);
+    if (col < KC_NO_REMAP_SIZE) {
+        action_exec((keyevent_t){.key = {.row = 0, .col = col}, .type = KEY_EVENT, .pressed = true, .time = (timer_read() | 1)});
+        action_exec((keyevent_t){.key = {.row = 0, .col = col}, .type = KEY_EVENT, .pressed = false, .time = (timer_read() | 1)});
+    }
+}
+
+uint8_t dynamic_config_register_code(uint16_t kc) {
+    uint8_t col = set_kc_no_remap(kc);
+    if (col < KC_NO_REMAP_SIZE) {
+        action_exec((keyevent_t){.key = {.row = 0, .col = col}, .type = KEY_EVENT, .pressed = true, .time = (timer_read() | 1)});
+    }
+    return col;
+}
+
+void dynamic_config_unregister_code_col(uint8_t col) {
+    if (col < KC_NO_REMAP_SIZE) {
+        action_exec((keyevent_t){.key = {.row = 0, .col = col}, .type = KEY_EVENT, .pressed = false, .time = (timer_read() | 1)});
+    }
+}
+
+void dynamic_config_unregister_code(uint16_t kc) {
+    for (int col = 0; col < KC_NO_REMAP_SIZE; col++) {
+        if (kc_no_remap[col] == kc) {
+            dynamic_config_unregister_code_col(col);
+            return;
+        }
+    }
+}
 
 uint16_t dynamic_config_keymap_keycode_to_keycode(uint8_t layer, uint16_t keycode) {
     if (layer >= MAX_LAYER) return keycode;
@@ -40,11 +80,18 @@ uint16_t dynamic_config_keymap_keycode_to_keycode(uint8_t layer, uint16_t keycod
 
 // override keymap_key_to_keycode
 uint16_t keymap_key_to_keycode(uint8_t layer, keypos_t key) {
-    if (key.row == 0 && key.col == 0) return kc_no_remap;
+    if (key.row == 0 && key.col < KC_NO_REMAP_SIZE) return kc_no_remap[key.col];
 
     return dynamic_config_keymap_keycode_to_keycode(layer, key.row * MATRIX_COLS + key.col);
 }
 
+void post_process_record_kb(uint16_t keycode, keyrecord_t* record) {
+    post_process_record_user(keycode, record);
+
+    if (!record->event.pressed && record->event.type == KEY_EVENT && record->event.key.row == 0 && record->event.key.col < KC_NO_REMAP_SIZE) {
+        kc_no_remap[record->event.key.col] = KC_NO;
+    }
+}
 
 #if !defined(TAPPING_TERM_PER_KEY)
 #    error "Option not satisfied"

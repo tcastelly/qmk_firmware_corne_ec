@@ -40,18 +40,7 @@ void process_dynamic_config_leader_task(void) {
                 if (match == 1) {
                     // do action
                     leading = false;
-                    set_kc_no_remap(p_leader->keycode);
-                    action_exec((keyevent_t){.key     = {.row = 0, .col = 0},
-                                             .type    = KEY_EVENT,
-                                             .pressed = true,
-                                             .time    = (timer_read() | 1)});
-
-                    set_kc_no_remap(p_leader->keycode);
-                    action_exec((keyevent_t){.key     = {.row = 0, .col = 0},
-                                             .type    = KEY_EVENT,
-                                             .pressed = false,
-                                             .time    = (timer_read() | 1)});
-
+                    dynamic_config_tap_code(p_leader->keycode);
                     return;
                 } else if (match == 0) {
                     any_active_leader |= true;
