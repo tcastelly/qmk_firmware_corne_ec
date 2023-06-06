@@ -5,7 +5,7 @@
 #include <stdint.h>
 #include "process_key_override.h"
 
-#define DYNAMIC_CONFIG_DEF_VERSION 12
+#define DYNAMIC_CONFIG_DEF_VERSION 13
 
 typedef struct {
     uint16_t from;
@@ -13,9 +13,22 @@ typedef struct {
 } map_t;
 
 typedef struct {
+    union {
+        struct {
+            int8_t scale_x;
+            int8_t scale_y;
+            int8_t scale_v;
+            int8_t scale_h;
+        };
+        int8_t scales[4];
+    };
+} dmouse_t;
+
+typedef struct {
     uint16_t           layer;
     uint16_t           keys_len;
     map_t const *const p_map;
+    dmouse_t const     mouse;
 } dkeymap_t;
 
 enum {

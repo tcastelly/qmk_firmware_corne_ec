@@ -78,6 +78,31 @@ uint16_t dynamic_config_keymap_keycode_to_keycode(uint8_t layer, uint16_t keycod
     return layer == 0 ? keycode : KC_TRNS;
 }
 
+int8_t dynamic_config_get_mouse_scale(uint8_t layer, DYNAMIC_CONFIG_MOUSE_SCALE scale) {
+    if (layer >= MAX_LAYER) return MOUSE_SCALE_BASE;
+
+    // Search for the keymap starting from the bottom of the configuration
+    // settings. Settings written in the bottom takes priority
+    for (int app = (int16_t)*p_active_app_cnt - 1; app >= 0; app--) {
+        if (p_active_apps[app] >= p_config->app_len) break;
+
+        const application_t *p_app      = &p_config->p_app[p_active_apps[app]];
+        int                  keymap_len = p_app->keymap_len;
+        for (int km = 0; km < keymap_len; km++) {
+            if (p_app->p_keymap[km].layer != layer) {
+                continue;
+            }
+
+            const dkeymap_t *p_keymap = &p_app->p_keymap[km];
+            if (p_keymap->mouse.scales[scale] != MOUSE_SCALE_TRNS) {
+                return p_keymap->mouse.scales[scale];
+            }
+        }
+    }
+
+    return layer == 0 ? MOUSE_SCALE_BASE : MOUSE_SCALE_TRNS;
+}
+
 // override keymap_key_to_keycode
 uint16_t keymap_key_to_keycode(uint8_t layer, keypos_t key) {
     if (key.row == 0 && key.col < KC_NO_REMAP_SIZE) return kc_no_remap[key.col];

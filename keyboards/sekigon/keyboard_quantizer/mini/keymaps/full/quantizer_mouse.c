@@ -28,8 +28,6 @@ int      reset_flag                  = 0;
 #    define ENCODER_MODIFIER_TIMEOUT_MS 500
 #endif
 
-static uint8_t  spd_rate_num            = 1;
-static uint8_t  spd_rate_den            = 1;
 static int16_t  gesture_move_x          = 0;
 static int16_t  gesture_move_y          = 0;
 static bool     gesture_wait            = false;
@@ -82,6 +80,19 @@ static uint16_t get_remapped_keycode_from_keycode(uint16_t keycode) {
     return dynamic_config_keymap_keycode_to_keycode(0, keycode);
 }
 
+static int8_t get_mouse_scale(DYNAMIC_CONFIG_MOUSE_SCALE scale_type) {
+    for (uint16_t layer = 15; layer > 0; layer--) {
+        if (layer_state & (1 << layer)) {
+            int8_t scale = dynamic_config_get_mouse_scale(layer, scale_type);
+            if (scale != MOUSE_SCALE_TRNS) {
+                return scale;
+            }
+        }
+    }
+
+    return dynamic_config_get_mouse_scale(0, scale_type);
+}
+
 void process_gesture(uint8_t layer, gesture_id_t gesture_id) {
     switch (gesture_id) {
         case GESTURE_DOWN_RIGHT ... GESTURE_UP_RIGHT: {
@@ -94,6 +105,31 @@ void process_gesture(uint8_t layer, gesture_id_t gesture_id) {
         default:
             break;
     }
+}
+
+static void calc_mouse_scaled_move(mouse_parse_result_t const* report, report_mouse_t* scaled) {
+    static int16_t x_frac;
+    static int16_t y_frac;
+    static int16_t v_frac;
+    static int16_t h_frac;
+
+    int8_t   scale_x = get_mouse_scale(DYNAMIC_CONFIG_MOUSE_SCALE_X);
+    int8_t   scale_y = get_mouse_scale(DYNAMIC_CONFIG_MOUSE_SCALE_Y);
+    int8_t   scale_v = get_mouse_scale(DYNAMIC_CONFIG_MOUSE_SCALE_V);
+    int8_t   scale_h = get_mouse_scale(DYNAMIC_CONFIG_MOUSE_SCALE_H);
+
+    int16_t x_real = (report->x * scale_x) + x_frac;
+    int16_t y_real = (report->y * scale_y) + y_frac;
+    int16_t v_real = (report->v * scale_v) + v_frac;
+    int16_t h_real = (report->h * scale_h) + h_frac;
+    scaled->x      = x_real >> 4;
+    scaled->y      = y_real >> 4;
+    scaled->v      = v_real >> 4;
+    scaled->h      = h_real >> 4;
+    x_frac         = x_real - (scaled->x << 4);
+    y_frac         = y_real - (scaled->y << 4);
+    v_frac         = v_real - (scaled->v << 4);
+    h_frac         = h_real - (scaled->h << 4);
 }
 
 void mouse_report_hook(mouse_parse_result_t const* report) {
@@ -120,13 +156,16 @@ void mouse_report_hook(mouse_parse_result_t const* report) {
         }
     }
 
+    report_mouse_t scaled;
+    calc_mouse_scaled_move(report, &scaled);
+
     //
     // Assign wheel to key action
     //
-    if (report->v != 0) {
+    if (scaled.v != 0) {
         keypos_t key;
-        wheel_move_v      = report->v;
-        uint16_t kc       = report->v > 0 ? KC_MS_WH_UP : KC_MS_WH_DOWN;
+        wheel_move_v      = scaled.v;
+        uint16_t kc       = scaled.v > 0 ? KC_MS_WH_UP : KC_MS_WH_DOWN;
         key.row           = kc >> 3;
         key.col           = kc & 0x07;
         is_encoder_action = true;
@@ -135,10 +174,10 @@ void mouse_report_hook(mouse_parse_result_t const* report) {
         is_encoder_action = false;
     }
 
-    if (report->h != 0) {
+    if (scaled.h != 0) {
         keypos_t key;
-        wheel_move_h      = report->h;
-        uint16_t kc       = report->h > 0 ? KC_MS_WH_LEFT : KC_MS_WH_RIGHT;
+        wheel_move_h      = scaled.h;
+        uint16_t kc       = scaled.h > 0 ? KC_MS_WH_LEFT : KC_MS_WH_RIGHT;
         key.row           = kc >> 3;
         key.col           = kc & 0x07;
         is_encoder_action = true;
@@ -153,39 +192,25 @@ void mouse_report_hook(mouse_parse_result_t const* report) {
     mouse_send_flag      = true;
     report_mouse_t mouse = pointing_device_get_report();
 
-    static int16_t x_rem;
-    static int16_t y_rem;
-
-    int16_t x = (x_rem + report->x) * spd_rate_num / spd_rate_den;
-    int16_t y = (y_rem + report->y) * spd_rate_num / spd_rate_den;
-
-    if (spd_rate_den - spd_rate_num > 0) {
-        x_rem = (x_rem + report->x) - (x * spd_rate_den);
-        y_rem = (y_rem + report->y) - (y * spd_rate_den);
-    } else {
-        x_rem = 0;
-        y_rem = 0;
-    }
-
-    if (x != 0) {
+    if (scaled.x != 0) {
         uint16_t ms_left_map = get_remapped_keycode_from_keycode(KC_MS_LEFT);
         if (ms_left_map == KC_MS_LEFT) {
-            mouse.x += x;
+            mouse.x += scaled.x;
         } else if (ms_left_map == KC_MS_WH_LEFT) {
-            mouse.h += (x > 0) ? 1 : -1;
+            mouse.h += (scaled.x > 0) ? 1 : -1;
         } else if (ms_left_map == KC_MS_WH_RIGHT) {
-            mouse.h += (x > 0) ? -1 : 1;
+            mouse.h += (scaled.x > 0) ? -1 : 1;
         }
     }
 
-    if (y != 0) {
+    if (scaled.y != 0) {
         uint16_t ms_up_map = get_remapped_keycode_from_keycode(KC_MS_UP);
         if (ms_up_map == KC_MS_UP) {
-            mouse.y += y;
+            mouse.y += scaled.y;
         } else if (ms_up_map == KC_MS_WH_UP) {
-            mouse.v += (y > 0) ? -1 : 1;
+            mouse.v += (scaled.y > 0) ? -1 : 1;
         } else if (ms_up_map == KC_MS_WH_DOWN) {
-            mouse.v += (y > 0) ? 1 : -1;
+            mouse.v += (scaled.y > 0) ? 1 : -1;
         }
     }
 
@@ -195,8 +220,8 @@ void mouse_report_hook(mouse_parse_result_t const* report) {
     // Save movement to recognize gesture
     //
     if (gesture_wait) {
-        gesture_move_x += report->x;
-        gesture_move_y += report->y;
+        gesture_move_x += scaled.x;
+        gesture_move_y += scaled.y;
     }
 }
 
