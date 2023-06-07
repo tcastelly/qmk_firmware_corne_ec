@@ -52,9 +52,9 @@ bool matrix_scan_custom(matrix_row_t current_matrix[]) {
 
     // If keyboard report is received, apply it to matrix
     if (hid_report_size > 0) {
-        hid_report_size    = 0;
         matrix_dest        = current_matrix;
         matrix_has_changed = parse_report(hid_instance, hid_report_buffer, hid_report_size);
+        hid_report_size    = 0;
         return matrix_has_changed;
     } else {
         return false;
@@ -96,6 +96,11 @@ static bool send_led_report(uint8_t* leds) {
     return false;
 }
 
+static volatile bool set_protocol_complete = false;
+void                 tuh_hid_set_protocol_complete_cb(uint8_t dev_addr, uint8_t instance, uint8_t protocol) {
+    set_protocol_complete = true;
+}
+
 void tuh_mount_cb(uint8_t dev_addr) {
     dprintf("USB device is mounted:%d\n", dev_addr);
 
@@ -104,7 +109,17 @@ void tuh_mount_cb(uint8_t dev_addr) {
     }
 
     for (int instance = 0; instance < tuh_hid_instance_count(dev_addr); instance++) {
-        tuh_hid_set_protocol(dev_addr, instance, HID_PROTOCOL_REPORT);
+        if (tuh_hid_get_protocol(dev_addr, instance) == HID_PROTOCOL_BOOT) {
+            set_protocol_complete = false;
+            __compiler_memory_barrier();
+            tuh_hid_set_protocol(dev_addr, instance, HID_PROTOCOL_REPORT);
+
+            uint16_t timeout_ms = 0;
+            while (!set_protocol_complete && ++timeout_ms < 100) {
+                wait_ms(1);
+                tuh_task();
+            }
+        }
 
         uint8_t const itf_protocol = tuh_hid_interface_protocol(dev_addr, instance);
         if (itf_protocol == HID_ITF_PROTOCOL_KEYBOARD) {
@@ -143,7 +158,7 @@ void tuh_hid_report_received_cb(uint8_t dev_addr, uint8_t instance, uint8_t cons
 
         hid_instance = instance;
         memcpy(hid_report_buffer, report, len);
-        __DSB();
+        __compiler_memory_barrier();
         // hid_report_size is used as trigger of report parser
         hid_report_size = len;
     }
