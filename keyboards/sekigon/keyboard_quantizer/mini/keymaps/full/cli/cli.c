@@ -9,6 +9,8 @@
 #include "bootloader.h"
 #include "pio_usb_ll.h"
 
+extern void tusb_print_debug_buffer(void);
+
 #define CLI_BUFFER_SIZE 1024
 static CLI_UINT           cliBuffer[BYTES_TO_CLI_UINTS(CLI_BUFFER_SIZE)];
 static EmbeddedCli       *cli             = NULL;
@@ -129,4 +131,6 @@ void cli_init(void) {
 
 void cli_exec(void) {
     if (cli_initialized) embeddedCliProcess(cli);
+    
+    tusb_print_debug_buffer();
 }

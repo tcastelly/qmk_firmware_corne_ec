@@ -173,24 +173,23 @@ void mouse_report_hook(mouse_parse_result_t const* report) {
         }
     }
 
-    uint16_t             ms_left_map = get_remapped_keycode_from_keycode(KC_MS_LEFT);
-    uint16_t             ms_up_map   = get_remapped_keycode_from_keycode(KC_MS_UP);
-    mouse_parse_result_t raw_report  = *report;
+    mouse_parse_result_t raw_report = *report;
+    scaled_report_t      scaled;
+    calc_mouse_scaled_move(&raw_report, &scaled);
 
+    uint16_t ms_left_map = get_remapped_keycode_from_keycode(KC_MS_LEFT);
+    uint16_t ms_up_map   = get_remapped_keycode_from_keycode(KC_MS_UP);
     if (ms_left_map == KC_MS_WH_RIGHT) {
         // remap x to h, and h will remap again
-        raw_report.h = raw_report.x;
-        raw_report.x = 0;
+        scaled.h += scaled.xh;
+        scaled.x = 0;
     }
 
     if (ms_up_map == KC_MS_WH_DOWN) {
         // remap y to v, and v will remap again
-        raw_report.v = -raw_report.y;
-        raw_report.y = 0;
+        scaled.v -= scaled.yv;
+        scaled.y = 0;
     }
-
-    scaled_report_t scaled;
-    calc_mouse_scaled_move(&raw_report, &scaled);
 
     //
     // Assign wheel to key action

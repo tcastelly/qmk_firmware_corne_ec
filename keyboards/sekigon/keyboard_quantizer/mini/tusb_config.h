@@ -38,6 +38,9 @@
 #define CFG_TUSB_OS               OPT_OS_CUSTOM
 #define CFG_TUSB_MCU              OPT_MCU_RP2040
 
+#define CFG_TUSB_DEBUG 0
+#define CFG_TUSB_DEBUG_PRINTF tusb_debug_printf
+
 // Disable device stack
 #define CFG_TUD_ENABLED     0
 
