@@ -6,7 +6,7 @@
 #include "hal.h"
 
 // 1ms repeat timer for USB frame
-extern void sof_timer(void *);
+extern void pio_usb_host_frame(void);
 
 static virtual_timer_t vt;
 static volatile bool   c1_stop_flag;
@@ -14,7 +14,7 @@ static volatile bool   c1_restart_flag;
 
 static void timer_cb(virtual_timer_t *_vt, void *_) {
     // Start USB frame
-    sof_timer(NULL);
+    pio_usb_host_frame();
 }
 
 void c1_before_flash_operation(void) {

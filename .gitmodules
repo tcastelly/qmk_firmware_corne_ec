@@ -29,3 +29,7 @@
 	path = keyboards/sekigon/keyboard_quantizer/mini/lib/tinyusb
 	url = https://github.com/sekigon-gonnoc/tinyusb.git
 	branch = for-keyboard-quantizer
+[submodule "keyboards/sekigon/keyboard_quantizer/mini/lib/Pico-PIO-USB"]
+	path = keyboards/sekigon/keyboard_quantizer/mini/lib/Pico-PIO-USB
+	url = https://github.com/sekigon-gonnoc/Pico-PIO-USB.git
+	branch = for-keyboard-quantizer
