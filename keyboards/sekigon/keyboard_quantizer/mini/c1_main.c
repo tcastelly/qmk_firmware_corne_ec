@@ -12,9 +12,31 @@ static virtual_timer_t vt;
 static volatile bool   c1_stop_flag;
 static volatile bool   c1_restart_flag;
 
-static void timer_cb(virtual_timer_t *_vt, void *_) {
+static uint32_t next_sof;
+
+static void __no_inline_not_in_flash_func(timer_cb)(virtual_timer_t *_vt, void *_) {
+    static bool sync;
+
+    // Adjust frame interval to 1ms
+    uint32_t enter_time = st_lld_get_counter();
+    if (enter_time >= next_sof) {
+        sync = false;
+    } else {
+        while (st_lld_get_counter() <= next_sof) {
+            continue;
+        }
+    }
+
     // Start USB frame
     pio_usb_host_frame();
+
+    // Schedule next frame
+    if (!sync) {
+        sync = true;
+        next_sof = enter_time + 1010;
+    } else {
+        next_sof += 1000;
+    }
 }
 
 void c1_before_flash_operation(void) {
@@ -75,4 +97,5 @@ void c1_main(void) {
 void c1_start_timer(void) {
     chVTObjectInit(&vt);
     chVTSetContinuous(&vt, TIME_MS2I(1), timer_cb, NULL);
+    next_sof = st_lld_get_counter() + 1010;
 }
