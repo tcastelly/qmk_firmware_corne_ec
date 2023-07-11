@@ -91,6 +91,8 @@ typedef struct {
 
 #endif
 
+extern uint16_t last_hold_t;
+
 extern bool is_hold_tapdance_disabled;
 
 extern void td_ralt_reset (qk_tap_dance_state_t *state, void *user_data);

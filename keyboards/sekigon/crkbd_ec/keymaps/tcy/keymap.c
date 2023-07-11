@@ -28,6 +28,8 @@ extern rgb_config_t rgb_matrix_config;
 
 #include "tapdance.c"
 
+int max_timer_elapsed = 10;
+
 #define TD_INDEX(code) ((code)&0xFF)
 
 // clang-format off
@@ -457,6 +459,10 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
           layer_off(_ESC);
           layer_off(_ESC_OSX);
           is_hold_tapdance_disabled = false;
+      }
+
+      if (timer_elapsed(last_hold_t) <max_timer_elapsed) {
+          return false;
       }
 
       action = &tap_dance_actions[TD_INDEX(keycode)];

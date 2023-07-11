@@ -3,6 +3,9 @@
 
 bool is_hold_tapdance_disabled = false;
 
+// prevent to escape first timer_elapsed test
+uint16_t last_hold_t = 15;
+
 void tap_dance_tap_hold_reset(qk_tap_dance_state_t *state, void *user_data) {
     tap_dance_tap_hold_t *tap_hold = (tap_dance_tap_hold_t *)user_data;
 
@@ -53,6 +56,8 @@ void tap_dance_tap_hold_finished_unprotected(qk_tap_dance_state_t *state, void *
 
 // START tap-hold
 void tap_dance_tap_hold_finished_layout(qk_tap_dance_state_t *state, void *user_data) {
+    last_hold_t = timer_read();
+
     tap_dance_tap_hold_t *tap_hold = (tap_dance_tap_hold_t *)user_data;
 
     is_hold_tapdance_disabled = true;
