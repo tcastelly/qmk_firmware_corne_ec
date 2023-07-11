@@ -26,95 +26,9 @@
 extern rgb_config_t rgb_matrix_config;
 #endif
 
-enum layer_names {
-    _QWERTY,
-    _QWERTY_OSX,
-    _LOWER,
-    _RAISE,
-    _ADJUST,
-    _ESC,
-    _ESC_OSX,
-    _NUM_PADS,
-    _ACCENTS_RALT
-};
-
-enum custom_keycodes {
-  QWERTY = SAFE_RANGE,
-  QWERTY_OSX,
-  LOWER,
-  RAISE,
-  ADJUST,
-  ESC,
-  ACCENT_GRAVE,
-  ACCENT_CIRCUM,
-  ACCENT_TREMA,
-  ACCENT_E_GRAVE,
-  ACCENT_A_GRAVE,
-
-  // to be used with RALT already pressed
-  ACCENT_I_CIRC_RALT,
-  ACCENT_O_CIRC_RALT,
-  ACCENT_U_AIGU_RALT,
-  ACCENT_C_RALT,
-  ACCENT_A_GRAVE_RALT,
-
-  // Jetbrains macro
-  JET_FIND,
-  JET_RNM,
-};
-
-typedef struct {
-  bool is_press_action;
-  int state;
-} tap;
-
-// default tap dance
-enum {
-  SINGLE_TAP = 1,
-  SINGLE_HOLD = 2, // should use tap_dance_tap_hold_t instead
-  DOUBLE_TAP = 3,
-  DOUBLE_HOLD = 4,
-  DOUBLE_SINGLE_TAP = 5, //send two single taps
-  TRIPLE_TAP = 6,
-  TRIPLE_HOLD = 7,
-  TRIPLE_SINGLE_TAP = 8
-};
-
-// "tap-hold"
-typedef struct {
-    uint16_t tap;
-    uint16_t hold;
-    uint16_t held;
-} tap_dance_tap_hold_t;
-
-// custom tap dance
-enum {
-    TD_ESC,
-    TD_ESC_OSX,
-    TD_TAB,
-    TD_O,
-    TD_P,
-    TD_L,
-    TD_ENT,
-    TD_LCTL,
-    TD_SCLN,
-    TD_LGUI,
-    TD_RALT,
-    TD_LALT,
-    TD_RALT_OSX,
-    TD_BSPC,
-    TD_BSPC_OSX,
-    TD_DEL,
-    TD_DEL_OSX,
-    TD_LEFT,
-    TD_LEFT_OSX,
-    TD_RIGHT,
-    TD_RIGHT_OSX
-};
+#include "tapdance.c"
 
 #define TD_INDEX(code) ((code)&0xFF)
-
-bool is_hold_tapdance_disabled = false;
 
 // clang-format off
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
@@ -139,10 +53,21 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   //|--------+---- ----+-------+--------+--------+--------|                    |--------+--------+--------+--------+--------+--------|
       KC_LSFT,     KC_Z,   KC_X,    KC_C,    KC_V,    KC_B,                         KC_N,    KC_M, KC_COMM,  KC_DOT, KC_SLSH, TD(TD_ENT),
   //|--------+--------+--------+--------+--------+--------+--------|  |--------+--------+--------+--------+--------+--------+--------|
-                                        KC_LCTL,TD(TD_LGUI),LOWER,    KC_SPC,   RAISE, TD(TD_RALT_OSX)
+                                        TD(TD_LCTL),TD(TD_LGUI),LOWER,    KC_SPC,   RAISE, TD(TD_RALT_OSX)
                                       //`--------------------------'  `--------------------------'
   ),
 
+  [_QWERTY_GAMING] = LAYOUT(
+  //,-----------------------------------------------------.                    ,-----------------------------------------------------.
+      KC_TAB,  KC_Q,   KC_W,    KC_E,    KC_R,    KC_T,                         KC_Y,    KC_U,    KC_I,KC_O,KC_P, KC_BSPC,
+  //|--------+--------+-------+--------+--------+--------|                    |--------+--------+--------+--------+--------+--------|
+      KC_ESC,  KC_A,   KC_S,    KC_D,    KC_F,    KC_G,                         KC_H,    KC_J,    KC_K,KC_L,KC_SCLN, KC_QUOT,
+  //|--------+---- ----+-------+--------+--------+--------|                    |--------+--------+--------+--------+--------+--------|
+      KC_LSFT,     KC_Z,   KC_X,    KC_C,    KC_V,    KC_B,                         KC_N,    KC_M, KC_COMM,  KC_DOT, KC_SLSH, KC_ENT,
+  //|--------+--------+--------+--------+--------+--------+--------|  |--------+--------+--------+--------+--------+--------+--------|
+                                        KC_LCTL,KC_SPC,RAISE,          KC_SPC,   LOWER, KC_RALT
+                                      //`--------------------------'  `--------------------------'
+  ),
 
   [_LOWER] = LAYOUT(
   //,-----------------------------------------------------.                    ,-----------------------------------------------------.
@@ -176,7 +101,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   //|--------+--------+--------+--------+--------+--------|                    |--------+--------+--------+--------+--------+--------|
       _______, _______, _______, _______, _______, _______,                     KC_MS_LEFT,KC_MS_DOWN,KC_MS_UP, KC_MS_RIGHT, _______,  _______,
   //|--------+--------+--------+--------+--------+--------+--------|  |--------+--------+--------+--------+--------+--------+--------|
-                                          _______, _______,KC_MS_BTN1, KC_MS_BTN2, _______, _______
+                                          _______, _______,KC_MS_BTN2, KC_MS_BTN1, _______, _______
                                       //`--------------------------'  `--------------------------'
   ),
 
@@ -218,7 +143,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
   [_ADJUST] = LAYOUT(
   //,-----------------------------------------------------.                    ,-----------------------------------------------------.
-      _______, QWERTY , QWERTY_OSX  , _______, _______, _______,                 _______, _______, _______, _______, _______, RESET,
+      _______, QWERTY , QWERTY_OSX  , QWERTY_GAMING, _______, _______,                 _______, _______, _______, _______, _______, RESET,
   //|--------+--------+--------+--------+--------+--------|                    |--------+--------+--------+--------+--------+--------|
       _______, _______,      _______, _______, _______, _______,                _______,  _______, _______,  _______, _______, _______,
   //|--------+--------+-     -------+--------+--------+--------|                    |--------+--------+--------+--------+--------+--------|
@@ -266,6 +191,42 @@ void matrix_scan_user(void) {
     }
 }
 
+// Associate our tap dance key with its functionality
+qk_tap_dance_action_t tap_dance_actions[] = {
+    [TD_ESC] = ACTION_TAP_DANCE_TAP_HOLD_LAYOUT(KC_ESC, _ESC),
+    [TD_ESC_OSX] = ACTION_TAP_DANCE_TAP_HOLD_LAYOUT(KC_ESC, _ESC_OSX),
+    [TD_TAB] = ACTION_TAP_DANCE_TAP_HOLD(KC_TAB, KC_TILD),
+    [TD_O] = ACTION_TAP_DANCE_TAP_HOLD(KC_O, KC_LPRN),
+    [TD_P] = ACTION_TAP_DANCE_TAP_HOLD(KC_P, KC_RPRN),
+    [TD_L] = ACTION_TAP_DANCE_TAP_HOLD(KC_L, KC_LCBR),
+    [TD_SCLN] = ACTION_TAP_DANCE_TAP_HOLD(KC_SCLN, KC_RCBR),
+    [TD_ENT] = ACTION_TAP_DANCE_TAP_HOLD(KC_ENT, KC_LSFT),
+
+    // same tap-dance
+    // enable it for osx and linux
+    [TD_LCTL] = ACTION_TAP_DANCE_FN_ADVANCED(NULL, td_lctl_finished, td_lctl_reset),
+    [TD_LALT] = ACTION_TAP_DANCE_FN_ADVANCED(NULL, td_lalt_finished, td_lalt_reset),
+    [TD_LGUI] = ACTION_TAP_DANCE_FN_ADVANCED(NULL, td_lgui_finished, td_lgui_reset),
+
+    [TD_BSPC] = ACTION_TAP_DANCE_TAP_HOLD(KC_BSPC, LCTL(KC_BSPC)),
+    [TD_BSPC_OSX] = ACTION_TAP_DANCE_TAP_HOLD(KC_BSPC, LALT(KC_BSPC)),
+
+    [TD_DEL] = ACTION_TAP_DANCE_TAP_HOLD_UNPROTECTED(KC_DEL, LCTL(KC_DEL)),
+    [TD_DEL_OSX] = ACTION_TAP_DANCE_TAP_HOLD_UNPROTECTED(KC_DEL, LALT(KC_DEL)),
+
+    [TD_LEFT] = ACTION_TAP_DANCE_TAP_HOLD_UNPROTECTED(KC_LEFT, LCTL(KC_LEFT)),
+    [TD_LEFT_OSX] = ACTION_TAP_DANCE_TAP_HOLD_UNPROTECTED(KC_LEFT, LALT(KC_LEFT)),
+
+    [TD_RIGHT] = ACTION_TAP_DANCE_TAP_HOLD_UNPROTECTED(KC_RIGHT, LALT(KC_RIGHT)),
+    [TD_RIGHT_OSX] = ACTION_TAP_DANCE_TAP_HOLD_UNPROTECTED(KC_RIGHT, LCTL(KC_RIGHT)),
+
+    [TD_RIGHT_OSX] = ACTION_TAP_DANCE_TAP_HOLD_UNPROTECTED(KC_RIGHT, LALT(KC_RIGHT)),
+    [TD_RIGHT] = ACTION_TAP_DANCE_TAP_HOLD_UNPROTECTED(KC_RIGHT, LCTL(KC_RIGHT)),
+
+    [TD_RALT_OSX] = ACTION_TAP_DANCE_FN_ADVANCED(NULL, td_ralt_osx_finished, td_ralt_osx_reset),
+    [TD_RALT] = ACTION_TAP_DANCE_FN_ADVANCED(NULL, td_ralt_finished, td_ralt_reset)
+};
+
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
   qk_tap_dance_action_t *action;
 
@@ -280,6 +241,13 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     case QWERTY_OSX:
         if (record->event.pressed) {
             layer_move(_QWERTY_OSX);
+        }
+        return false;
+        break;
+
+    case QWERTY_GAMING:
+        if (record->event.pressed) {
+            layer_move(_QWERTY_GAMING);
         }
         return false;
         break;
@@ -499,351 +467,4 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
       break;
   }
   return true;
-}
-
-void tap_dance_tap_hold_reset(qk_tap_dance_state_t *state, void *user_data) {
-    tap_dance_tap_hold_t *tap_hold = (tap_dance_tap_hold_t *)user_data;
-
-    if (tap_hold->held) {
-        unregister_code16(tap_hold->held);
-        tap_hold->held = 0;
-    }
-}
-
-void tap_dance_tap_hold_finished(qk_tap_dance_state_t *state, void *user_data) {
-    tap_dance_tap_hold_t *tap_hold = (tap_dance_tap_hold_t *)user_data;
-
-    if (state->pressed) {
-        if (state->count == 1
-            && !is_hold_tapdance_disabled
-#ifndef PERMISSIVE_HOLD
-            && !state->interrupted
-#endif
-        ) {
-            register_code16(tap_hold->hold);
-            tap_hold->held = tap_hold->hold;
-        } else {
-            register_code16(tap_hold->tap);
-            tap_hold->held = tap_hold->tap;
-        }
-    }
-}
-
-// allow call multiple tap dance simultaneously
-// e.g: TD_DEL/TD_DEL_OSX
-void tap_dance_tap_hold_finished_unprotected(qk_tap_dance_state_t *state, void *user_data) {
-    tap_dance_tap_hold_t *tap_hold = (tap_dance_tap_hold_t *)user_data;
-
-    if (state->pressed) {
-        if (state->count == 1
-#ifndef PERMISSIVE_HOLD
-            && !state->interrupted
-#endif
-        ) {
-            register_code16(tap_hold->hold);
-            tap_hold->held = tap_hold->hold;
-        } else {
-            register_code16(tap_hold->tap);
-            tap_hold->held = tap_hold->tap;
-        }
-    }
-}
-
-// START tap-hold
-void tap_dance_tap_hold_finished_layout(qk_tap_dance_state_t *state, void *user_data) {
-    tap_dance_tap_hold_t *tap_hold = (tap_dance_tap_hold_t *)user_data;
-
-    is_hold_tapdance_disabled = true;
-
-    if (state->pressed) {
-        layer_on(tap_hold->hold);
-    }
-}
-
-void tap_dance_tap_hold_reset_layout(qk_tap_dance_state_t *state, void *user_data) {
-    is_hold_tapdance_disabled = false;
-}
-
-#define ACTION_TAP_DANCE_TAP_HOLD(tap, hold) \
-    { .fn = {NULL, tap_dance_tap_hold_finished, tap_dance_tap_hold_reset}, .user_data = (void *)&((tap_dance_tap_hold_t){tap, hold, 0}), }
-
-// allow call multiple tap dance simultaneously
-// e.g: TD_DEL/TD_DEL_OSX
-#define ACTION_TAP_DANCE_TAP_HOLD_UNPROTECTED(tap, hold) \
-    { .fn = {NULL, tap_dance_tap_hold_finished_unprotected, tap_dance_tap_hold_reset}, .user_data = (void *)&((tap_dance_tap_hold_t){tap, hold, 0}), }
-
-#define ACTION_TAP_DANCE_TAP_HOLD_LAYOUT(tap, hold) \
-    { .fn = {NULL, tap_dance_tap_hold_finished_layout, tap_dance_tap_hold_reset_layout}, .user_data = (void *)&((tap_dance_tap_hold_t){tap, hold, 0}), }
-// END tap-hold
-
-
-// START default tap-dance
-int cur_dance (qk_tap_dance_state_t *state) {
-    if (state->count == 1) {
-        //key has not been interrupted, but they key is still held. Means you want to send a 'HOLD'.
-        if (state->interrupted || !state->pressed) {
-            return SINGLE_TAP;
-        }
-        //key has not been interrupted, but they key is still held. Means you want to send a 'HOLD'.
-        else {
-            return SINGLE_HOLD;
-        }
-    }
-    else if (state->count == 2) {
-        /*
-         * DOUBLE_SINGLE_TAP is to distinguish between typing "pepper", and actually wanting a double tap
-         * action when hitting 'pp'. Suggested use case for this return value is when you want to send two
-         * keystrokes of the key, and not the 'double tap' action/macro.
-         */
-        if (state->interrupted) {
-            return DOUBLE_SINGLE_TAP;
-        }
-        else if (state->pressed) {
-            return DOUBLE_HOLD;
-        }
-        else {
-            return DOUBLE_TAP;
-        }
-    }
-    else if (state->count == 3) {
-        if (state->interrupted) {
-            return TRIPLE_SINGLE_TAP;
-        }
-        else if (state->pressed) {
-            return TRIPLE_HOLD;
-        }
-        else {
-            return TRIPLE_TAP;
-        }
-    }
-
-    //magic number. At some point this method will expand to work for more presses
-    return 8;
-}
-
-//instanalize an instance of 'tap' for the 'x' tap dance.
-static tap xtap_state = {
-  .is_press_action = true,
-  .state = 0
-};
-
-void td_ralt_finished (qk_tap_dance_state_t *state, void *user_data) {
-  xtap_state.state = cur_dance(state);
-  is_hold_tapdance_disabled = false;
-
-  switch (xtap_state.state) {
-      case SINGLE_TAP:
-      case SINGLE_HOLD:
-          register_code(KC_RALT);
-          layer_on(_ACCENTS_RALT);
-          break;
-
-      case DOUBLE_SINGLE_TAP:
-      case DOUBLE_HOLD:
-          register_code(KC_LCTL);
-          break;
-  }
-}
-
-void td_ralt_reset (qk_tap_dance_state_t *state, void *user_data) {
-    is_hold_tapdance_disabled = false;
-
-    switch (xtap_state.state) {
-        case SINGLE_TAP:
-        case SINGLE_HOLD:
-            unregister_code(KC_RALT);
-            layer_off(_ACCENTS_RALT);
-            break;
-
-        case DOUBLE_SINGLE_TAP:
-        case DOUBLE_HOLD:
-            unregister_code(KC_LCTL);
-            break;
-    }
-    xtap_state.state = 0;
-}
-
-void td_ralt_osx_finished (qk_tap_dance_state_t *state, void *user_data) {
-  xtap_state.state = cur_dance(state);
-  is_hold_tapdance_disabled = false;
-
-  switch (xtap_state.state) {
-      case SINGLE_TAP:
-      case SINGLE_HOLD:
-          register_code(KC_RALT);
-          layer_on(_ACCENTS_RALT);
-          break;
-
-      case DOUBLE_SINGLE_TAP:
-      case DOUBLE_HOLD:
-          register_code(KC_LGUI);
-          break;
-  }
-}
-
-void td_ralt_osx_reset (qk_tap_dance_state_t *state, void *user_data) {
-    is_hold_tapdance_disabled = false;
-
-    switch (xtap_state.state) {
-        case SINGLE_TAP:
-        case SINGLE_HOLD:
-            unregister_code(KC_RALT);
-            layer_off(_ACCENTS_RALT);
-            break;
-
-        case DOUBLE_SINGLE_TAP:
-        case DOUBLE_HOLD:
-            unregister_code(KC_LGUI);
-            break;
-    }
-    xtap_state.state = 0;
-}
-
-void td_lalt_finished (qk_tap_dance_state_t *state, void *user_data) {
-  xtap_state.state = cur_dance(state);
-  is_hold_tapdance_disabled = false;
-
-  switch (xtap_state.state) {
-      case SINGLE_TAP:
-      case SINGLE_HOLD:
-          register_code(KC_LALT);
-          break;
-
-      case DOUBLE_SINGLE_TAP:
-      case DOUBLE_HOLD:
-          layer_on(_NUM_PADS);
-          break;
-  }
-}
-
-void td_lalt_reset (qk_tap_dance_state_t *state, void *user_data) {
-    is_hold_tapdance_disabled = false;
-
-    switch (xtap_state.state) {
-        case SINGLE_TAP:
-        case SINGLE_HOLD:
-            unregister_code(KC_LALT);
-            break;
-
-        case DOUBLE_SINGLE_TAP:
-        case DOUBLE_HOLD:
-            layer_off(_NUM_PADS);
-            break;
-    }
-    xtap_state.state = 0;
-}
-
-void td_lgui_finished (qk_tap_dance_state_t *state, void *user_data) {
-  xtap_state.state = cur_dance(state);
-  is_hold_tapdance_disabled = false;
-
-  switch (xtap_state.state) {
-      case SINGLE_TAP:
-      case SINGLE_HOLD:
-          register_code(KC_LGUI);
-          break;
-
-      case DOUBLE_SINGLE_TAP:
-      case DOUBLE_HOLD:
-          layer_on(_NUM_PADS);
-          break;
-  }
-}
-
-void td_lgui_reset (qk_tap_dance_state_t *state, void *user_data) {
-    is_hold_tapdance_disabled = false;
-
-    switch (xtap_state.state) {
-        case SINGLE_TAP:
-        case SINGLE_HOLD:
-            unregister_code(KC_LGUI);
-            break;
-
-        case DOUBLE_SINGLE_TAP:
-        case DOUBLE_HOLD:
-            layer_off(_NUM_PADS);
-            break;
-    }
-    xtap_state.state = 0;
-}
-
-void td_lctl_finished (qk_tap_dance_state_t *state, void *user_data) {
-  xtap_state.state = cur_dance(state);
-  is_hold_tapdance_disabled = false;
-
-  switch (xtap_state.state) {
-      case SINGLE_TAP:
-      case SINGLE_HOLD:
-          register_code(KC_LCTL);
-          break;
-
-      case DOUBLE_SINGLE_TAP:
-      case DOUBLE_HOLD:
-          register_code(KC_LALT);
-          break;
-  }
-}
-
-void td_lctl_reset (qk_tap_dance_state_t *state, void *user_data) {
-    is_hold_tapdance_disabled = false;
-
-    switch (xtap_state.state) {
-        case SINGLE_TAP:
-        case SINGLE_HOLD:
-            unregister_code(KC_LCTL);
-            break;
-
-        case DOUBLE_SINGLE_TAP:
-        case DOUBLE_HOLD:
-            unregister_code(KC_LALT);
-            break;
-    }
-    xtap_state.state = 0;
-}
-// END default tap-dance
-
-// Associate our tap dance key with its functionality
-qk_tap_dance_action_t tap_dance_actions[] = {
-    [TD_ESC] = ACTION_TAP_DANCE_TAP_HOLD_LAYOUT(KC_ESC, _ESC),
-    [TD_ESC_OSX] = ACTION_TAP_DANCE_TAP_HOLD_LAYOUT(KC_ESC, _ESC_OSX),
-    [TD_TAB] = ACTION_TAP_DANCE_TAP_HOLD(KC_TAB, KC_TILD),
-    [TD_O] = ACTION_TAP_DANCE_TAP_HOLD(KC_O, KC_LPRN),
-    [TD_P] = ACTION_TAP_DANCE_TAP_HOLD(KC_P, KC_RPRN),
-    [TD_L] = ACTION_TAP_DANCE_TAP_HOLD(KC_L, KC_LCBR),
-    [TD_SCLN] = ACTION_TAP_DANCE_TAP_HOLD(KC_SCLN, KC_RCBR),
-    [TD_ENT] = ACTION_TAP_DANCE_TAP_HOLD(KC_ENT, KC_LSFT),
-
-    // same tap-dance
-    // enable it for osx and linux
-    [TD_LCTL] = ACTION_TAP_DANCE_FN_ADVANCED(NULL, td_lctl_finished, td_lctl_reset),
-    [TD_LALT] = ACTION_TAP_DANCE_FN_ADVANCED(NULL, td_lalt_finished, td_lalt_reset),
-    [TD_LGUI] = ACTION_TAP_DANCE_FN_ADVANCED(NULL, td_lgui_finished, td_lgui_reset),
-
-    [TD_BSPC] = ACTION_TAP_DANCE_TAP_HOLD(KC_BSPC, LCTL(KC_BSPC)),
-    [TD_BSPC_OSX] = ACTION_TAP_DANCE_TAP_HOLD(KC_BSPC, LALT(KC_BSPC)),
-
-    [TD_DEL] = ACTION_TAP_DANCE_TAP_HOLD_UNPROTECTED(KC_DEL, LCTL(KC_DEL)),
-    [TD_DEL_OSX] = ACTION_TAP_DANCE_TAP_HOLD_UNPROTECTED(KC_DEL, LALT(KC_DEL)),
-
-    [TD_LEFT] = ACTION_TAP_DANCE_TAP_HOLD_UNPROTECTED(KC_LEFT, LCTL(KC_LEFT)),
-    [TD_LEFT_OSX] = ACTION_TAP_DANCE_TAP_HOLD_UNPROTECTED(KC_LEFT, LALT(KC_LEFT)),
-
-    [TD_RIGHT] = ACTION_TAP_DANCE_TAP_HOLD_UNPROTECTED(KC_RIGHT, LALT(KC_RIGHT)),
-    [TD_RIGHT_OSX] = ACTION_TAP_DANCE_TAP_HOLD_UNPROTECTED(KC_RIGHT, LCTL(KC_RIGHT)),
-
-    [TD_RIGHT_OSX] = ACTION_TAP_DANCE_TAP_HOLD_UNPROTECTED(KC_RIGHT, LALT(KC_RIGHT)),
-    [TD_RIGHT] = ACTION_TAP_DANCE_TAP_HOLD_UNPROTECTED(KC_RIGHT, LCTL(KC_RIGHT)),
-
-    [TD_RALT_OSX] = ACTION_TAP_DANCE_FN_ADVANCED(NULL, td_ralt_osx_finished, td_ralt_osx_reset),
-    [TD_RALT] = ACTION_TAP_DANCE_FN_ADVANCED(NULL, td_ralt_finished, td_ralt_reset)
-};
-
-// Set a long-ish tapping term for tap-dance keys
-uint16_t get_tapping_term(uint16_t keycode, keyrecord_t *record) {
-    switch (keycode) {
-        case QK_TAP_DANCE ... QK_TAP_DANCE_MAX:
-            return 275;
-        default:
-            return TAPPING_TERM;
-    }
 }
