@@ -62,7 +62,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define DIODE_DIRECTION COL2ROW
 
 #define SOFT_SERIAL_PIN 1
-#define EE_HANDS
+
+#define MASTER_LEFT
+// #define EE_HANDS
 
 #define RGB_DI_PIN 7
 #define RGBLED_NUM 42
