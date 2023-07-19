@@ -63,7 +63,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #define SOFT_SERIAL_PIN 1
 
-#define MASTER_LEFT
+// #define MASTER_RIGHT
 // #define EE_HANDS
 
 #define RGB_DI_PIN 7
