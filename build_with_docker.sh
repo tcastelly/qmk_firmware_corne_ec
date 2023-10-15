@@ -14,3 +14,17 @@ docker run \
     -v $PWD/.build:/qmk_firmware/.build\
     -ti qmkfm/qmk_cli:corne_ec\
     make sekigon/crkbd_ec:tcy:uf2
+
+docker run \
+    --rm \
+    -v $PWD:/qmk_firmware \
+    -v $PWD/.build:/qmk_firmware/.build\
+    -ti qmkfm/qmk_cli:corne_ec\
+    make mc2s/rev1:default
+
+docker run \
+    --rm \
+    -v $PWD:/qmk_firmware \
+    -v $PWD/.build:/qmk_firmware/.build\
+    -ti qmkfm/qmk_cli:corne_ec\
+    make mc2s/rev1:tcy
