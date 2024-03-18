@@ -11,6 +11,6 @@ fi
 docker run \
     --rm \
     -v $PWD:/qmk_firmware \
-    -v $PWD/.build:/qmk_firmware/.build\
-    -ti qmkfm/qmk_cli:quantizer_mini\
-    make sekigon/keyboard_quantizer/mini:tcy_full:uf2
+    -v $PWD/.build:/qmk_firmware/.build \
+    -ti qmkfm/qmk_cli:corne_ec \
+    make sekigon/keyboard_quantizer/mini:full:uf2

@@ -9,6 +9,7 @@
 #include "cli.h"
 #include "dynamic_config.h"
 #include "quantizer_mouse.h"
+#include "dynamic_config_tap_dance.h"
 
 user_config_t user_config;
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {{{KC_NO}}};

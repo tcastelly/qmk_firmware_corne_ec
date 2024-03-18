@@ -5,6 +5,9 @@
 #include "dynamic_config_def.h"
 #include "dynamic_config.h"
 #include "process_tap_dance.h"
+#include "dynamic_config_tap_dance.h"
+
+bool is_hold_tapdance_disabled = false;
 
 // Define a type for as many tap dance states as you need
 typedef enum { TD_NONE, TD_UNKNOWN, TD_SINGLE_TAP, TD_SINGLE_HOLD, TD_DOUBLE_TAP, TD_DOUBLE_HOLD } td_state_t;
@@ -30,17 +33,20 @@ static uint8_t             ridx = 0;
 
 static td_state_t cur_dance(tap_dance_state_t *state) {
     if (state->count == 1) {
-        if (!state->pressed)
+        if (state->interrupted || !state->pressed) {
             return TD_SINGLE_TAP;
-        else
+        }
+        else {
             return TD_SINGLE_HOLD;
+        }
     } else if (state->count == 2) {
-        if (!state->pressed)
+        if (state->interrupted || !state->pressed)
             return TD_DOUBLE_TAP;
         else
             return TD_DOUBLE_HOLD;
-    } else
-        return TD_UNKNOWN;
+    }
+
+    return TD_SINGLE_TAP;
 }
 
 static void push_deffered_event(uint16_t kc, bool pressed, td_tap_t *td_tap) {
@@ -151,6 +157,7 @@ void activate_tap_dances(void) {
         td_tap[td_cnt].state                = TD_NONE;
         td_tap[td_cnt].kc_remap_col         = 0xff;
         tap_dance_actions[td_cnt]           = (tap_dance_action_t)ACTION_TAP_DANCE_FN_ADVANCED(NULL, td_finished, td_reset);
+        // tap_dance_actions[td_cnt]           = (tap_dance_action_t)ACTION_TAP_DANCE_TAP_HOLD(p_config->p_tap_dance[td].single_tap, p_config->p_tap_dance[td].single_hold);
         td_tap[td_cnt].p_td                 = &p_config->p_tap_dance[td];
         tap_dance_actions[td_cnt].user_data = &td_tap[td_cnt];
         td_cnt++;
@@ -182,3 +189,67 @@ void dynamic_tap_dance_task(void) {
         avoid_recurse = false;
     }
 }
+
+void tap_dance_tap_hold_reset(tap_dance_state_t *state, void *user_data) {
+    tap_dance_tap_hold_t *tap_hold = (tap_dance_tap_hold_t *)user_data;
+
+    if (tap_hold->held) {
+        unregister_code16(tap_hold->held);
+        tap_hold->held = 0;
+    }
+}
+
+void tap_dance_tap_hold_finished(tap_dance_state_t *state, void *user_data) {
+    tap_dance_tap_hold_t *tap_hold = (tap_dance_tap_hold_t *)user_data;
+
+    if (state->pressed) {
+        if (state->count == 1
+            && !is_hold_tapdance_disabled
+#ifndef PERMISSIVE_HOLD
+            && !state->interrupted
+#endif
+        ) {
+            register_code16(tap_hold->hold);
+            tap_hold->held = tap_hold->hold;
+        } else {
+            register_code16(tap_hold->tap);
+            tap_hold->held = tap_hold->tap;
+        }
+    }
+}
+
+// allow call multiple tap dance simultaneously
+// e.g: TD_DEL/TD_DEL_OSX
+void tap_dance_tap_hold_finished_unprotected(tap_dance_state_t *state, void *user_data) {
+    tap_dance_tap_hold_t *tap_hold = (tap_dance_tap_hold_t *)user_data;
+
+    if (state->pressed) {
+        if (state->count == 1
+#ifndef PERMISSIVE_HOLD
+            && !state->interrupted
+#endif
+        ) {
+            register_code16(tap_hold->hold);
+            tap_hold->held = tap_hold->hold;
+        } else {
+            register_code16(tap_hold->tap);
+            tap_hold->held = tap_hold->tap;
+        }
+    }
+}
+
+// START tap-hold
+void tap_dance_tap_hold_finished_layout(tap_dance_state_t *state, void *user_data) {
+    tap_dance_tap_hold_t *tap_hold = (tap_dance_tap_hold_t *)user_data;
+
+    is_hold_tapdance_disabled = true;
+
+    if (state->pressed) {
+        layer_on(tap_hold->hold);
+    }
+}
+
+void tap_dance_tap_hold_reset_layout(tap_dance_state_t *state, void *user_data) {
+    is_hold_tapdance_disabled = false;
+}
+// END tap-hold

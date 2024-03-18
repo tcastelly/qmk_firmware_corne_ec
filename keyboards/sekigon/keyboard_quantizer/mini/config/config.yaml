@@ -1,0 +1,21 @@
+# See https://github.com/sekigon-gonnoc/keyboard-quantizer-doc/blob/master/mini/full_config.md for details
+# Config version: 13
+- application:
+    keymaps:
+      - layer:
+          id: 0
+          keys:
+            KC_TAB:
+              { tap_dance: { single_tap: KC_TAB, single_hold: KC_TILD } }
+            KC_O:
+              { tap_dance: { single_tap: KC_O, single_hold: KC_LPRN } }
+            KC_P:
+              { tap_dance: { single_tap: KC_P, single_hold: KC_RPRN } }
+            KC_L:
+              { tap_dance: { single_tap: KC_L, single_hold: KC_LCBR } }
+            KC_SCLN:
+              { tap_dance: { single_tap: KC_SCLN, single_hold: KC_RCBR } }
+            KC_BACKSPACE:
+              { tap_dance: { single_tap: KC_BSPC, single_hold: LCTL(KC_BSPC) } }
+            KC_DEL:
+              { tap_dance: { single_tap: KC_DEL, single_hold: LCTL(KC_DEL) } }
