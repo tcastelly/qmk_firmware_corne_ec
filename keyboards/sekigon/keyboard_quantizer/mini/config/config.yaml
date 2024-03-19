@@ -1,5 +1,7 @@
 # See https://github.com/sekigon-gonnoc/keyboard-quantizer-doc/blob/master/mini/full_config.md for details
-# Config version: 13
+# Config version:
+- default:
+    tapping_term: 175
 - application:
     keymaps:
       - layer:

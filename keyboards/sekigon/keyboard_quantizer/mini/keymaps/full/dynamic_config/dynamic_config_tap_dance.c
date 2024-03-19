@@ -24,7 +24,10 @@ typedef struct {
     uint16_t  kc;
 } td_deffered_event_t;
 
-tap_dance_action_t tap_dance_actions[TAPDANCE_LEN_MAX] = {};
+tap_dance_action_t tap_dance_actions[TAPDANCE_LEN_MAX] = {}
+//     [TD_O] = ACTION_TAP_DANCE_TAP_HOLD(KC_O, KC_LPRN),
+;
+
 static td_tap_t    td_tap[TAPDANCE_LEN_MAX];
 #define DEFFERED_EVENT_CNT 16
 static td_deffered_event_t deffered_event[DEFFERED_EVENT_CNT];
@@ -40,13 +43,15 @@ static td_state_t cur_dance(tap_dance_state_t *state) {
             return TD_SINGLE_HOLD;
         }
     } else if (state->count == 2) {
-        if (state->interrupted || !state->pressed)
+        if (state->interrupted || !state->pressed) {
             return TD_DOUBLE_TAP;
-        else
+        }
+        else {
             return TD_DOUBLE_HOLD;
+        }
     }
 
-    return TD_SINGLE_TAP;
+    return TD_DOUBLE_TAP;
 }
 
 static void push_deffered_event(uint16_t kc, bool pressed, td_tap_t *td_tap) {
