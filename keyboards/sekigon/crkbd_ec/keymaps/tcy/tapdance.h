@@ -1,6 +1,8 @@
 #ifndef TAPDANCE_H
 #define TAPDANCE_H
 
+bool touched_td;
+
 enum layer_names {
     _QWERTY,
     _QWERTY_OSX,
@@ -38,6 +40,9 @@ enum custom_keycodes {
   // Jetbrains macro
   JET_FIND,
   JET_RNM,
+  JET_OPTI,
+  JET_FORMAT,
+  JET_FORMAT_OSX,
 };
 
 // default tap dance
@@ -57,6 +62,8 @@ enum {
     TD_ESC,
     TD_ESC_OSX,
     TD_TAB,
+    TD_A,
+    TD_A_OSX,
     TD_O,
     TD_P,
     TD_L,

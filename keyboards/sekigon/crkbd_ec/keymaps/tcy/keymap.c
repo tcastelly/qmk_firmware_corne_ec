@@ -39,7 +39,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   //,-----------------------------------------------------.                    ,-----------------------------------------------------.
       TD(TD_TAB),  KC_Q,   KC_W,    KC_E,    KC_R,    KC_T,                         KC_Y,    KC_U,    KC_I,TD(TD_O),TD(TD_P), TD(TD_BSPC),
   //|--------+--------+-------+--------+--------+--------|                    |--------+--------+--------+--------+--------+--------|
-      TD(TD_ESC),  KC_A,   KC_S,    KC_D,    KC_F,    KC_G,                         KC_H,    KC_J,    KC_K,TD(TD_L),TD(TD_SCLN), KC_QUOT,
+      TD(TD_ESC), TD(TD_A),KC_S,    KC_D,    KC_F,    KC_G,                         KC_H,    KC_J,    KC_K,TD(TD_L),TD(TD_SCLN), KC_QUOT,
   //|--------+---- ----+-------+--------+--------+--------|                    |--------+--------+--------+--------+--------+--------|
       KC_LSFT,     KC_Z,   KC_X,    KC_C,    KC_V,    KC_B,                         KC_N,    KC_M, KC_COMM,  KC_DOT, KC_SLSH, TD(TD_ENT),
   //|--------+--------+--------+--------+--------+--------+--------|  |--------+--------+--------+--------+--------+--------+--------|
@@ -51,7 +51,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   //,-----------------------------------------------------.                    ,-----------------------------------------------------.
       TD(TD_TAB),  KC_Q,   KC_W,    KC_E,    KC_R,    KC_T,                         KC_Y,    KC_U,    KC_I,TD(TD_O),TD(TD_P), TD(TD_BSPC_OSX),
   //|--------+--------+-------+--------+--------+--------|                    |--------+--------+--------+--------+--------+--------|
-      TD(TD_ESC_OSX),  KC_A,   KC_S,    KC_D,  KC_F,     KC_G,                          KC_H,    KC_J,    KC_K,TD(TD_L),TD(TD_SCLN), KC_QUOT,
+      TD(TD_ESC_OSX), TD(TD_A_OSX), KC_S, KC_D, KC_F,  KC_G,                          KC_H,    KC_J,    KC_K,TD(TD_L),TD(TD_SCLN), KC_QUOT,
   //|--------+---- ----+-------+--------+--------+--------|                    |--------+--------+--------+--------+--------+--------|
       KC_LSFT,     KC_Z,   KC_X,    KC_C,    KC_V,    KC_B,                         KC_N,    KC_M, KC_COMM,  KC_DOT, KC_SLSH, TD(TD_ENT),
   //|--------+--------+--------+--------+--------+--------+--------|  |--------+--------+--------+--------+--------+--------+--------|
@@ -97,7 +97,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
   [_ESC_OSX] = LAYOUT(
   //,-----------------------------------------------------.                    ,-----------------------------------------------------.
-      ACCENT_GRAVE, ACCENT_GRAVE, _______, ACCENT_E_GRAVE, JET_RNM, _______,    ACCENT_CIRCUM, KC_WH_D, KC_WH_U, _______, _______, TD(TD_DEL_OSX),
+      ACCENT_GRAVE, ACCENT_GRAVE, _______, ACCENT_E_GRAVE, JET_RNM, _______,    ACCENT_CIRCUM, KC_WH_D, KC_WH_U, JET_OPTI, JET_FORMAT_OSX, TD(TD_DEL_OSX),
   //|--------+--------+--------+--------+--------+--------|                    |--------+--------+--------+--------+--------+--------|
       _______, ACCENT_A_GRAVE, _______, _______, JET_FIND, _______,              TD(TD_LEFT_OSX), KC_DOWN, KC_UP,  TD(TD_RIGHT_OSX), _______, ACCENT_TREMA,
   //|--------+--------+--------+--------+--------+--------|                    |--------+--------+--------+--------+--------+--------|
@@ -109,7 +109,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
   [_ESC] = LAYOUT(
   //,-----------------------------------------------------.                    ,-----------------------------------------------------.
-      ACCENT_GRAVE, ACCENT_GRAVE, _______, ACCENT_E_GRAVE, JET_RNM, _______,   ACCENT_CIRCUM, KC_WH_D, KC_WH_U, _______, _______, TD(TD_DEL),
+      ACCENT_GRAVE, ACCENT_GRAVE, _______, ACCENT_E_GRAVE, JET_RNM, _______,   ACCENT_CIRCUM, KC_WH_D, KC_WH_U, JET_OPTI, JET_FORMAT, TD(TD_DEL),
   //|--------+--------+--------+--------+--------+--------|                    |--------+--------+--------+--------+--------+--------|
       _______, ACCENT_A_GRAVE, _______, _______, JET_FIND, _______,              TD(TD_LEFT), KC_DOWN, KC_UP,  TD(TD_RIGHT), _______, ACCENT_TREMA,
   //|--------+--------+--------+--------+--------+--------|                    |--------+--------+--------+--------+--------+--------|
@@ -195,6 +195,8 @@ void matrix_scan_user(void) {
 
 // Associate our tap dance key with its functionality
 qk_tap_dance_action_t tap_dance_actions[] = {
+    [TD_A] = ACTION_TAP_DANCE_TAP_HOLD(KC_A, KC_LCTL),
+    [TD_A_OSX] = ACTION_TAP_DANCE_TAP_HOLD(KC_A, KC_LCTL),
     [TD_ESC] = ACTION_TAP_DANCE_TAP_HOLD_LAYOUT(KC_ESC, _ESC),
     [TD_ESC_OSX] = ACTION_TAP_DANCE_TAP_HOLD_LAYOUT(KC_ESC, _ESC_OSX),
     [TD_TAB] = ACTION_TAP_DANCE_TAP_HOLD(KC_TAB, KC_TILD),
@@ -296,6 +298,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
           unregister_code(KC_6);
           unregister_code(KC_RALT);
       }
+      touched_td = true;
       break;
 
     case ACCENT_TREMA:
@@ -308,6 +311,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
           unregister_code(KC_LSFT);
           unregister_code(KC_RALT);
       }
+      touched_td = true;
       break;
 
     case ACCENT_GRAVE:
@@ -318,6 +322,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
           unregister_code(KC_GRV);
           unregister_code(KC_RALT);
       }
+      touched_td = true;
       break;
 
     case ACCENT_E_GRAVE:
@@ -330,6 +335,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
           register_code(KC_E);
           unregister_code(KC_E);
       }
+      touched_td = true;
       break;
 
       // to be used with RALT already pressed
@@ -345,6 +351,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
            // will be unregister by `td_ralt_reset`
            register_code(KC_RALT);
        }
+      touched_td = true;
        break;
 
      case ACCENT_I_CIRC_RALT:
@@ -359,6 +366,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
            // will be unregister by `td_ralt_reset`
            register_code(KC_RALT);
        }
+       touched_td = true;
        break;
 
      case ACCENT_O_CIRC_RALT:
@@ -373,6 +381,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
            // will be unregister by `td_ralt_reset`
            register_code(KC_RALT);
        }
+       touched_td = true;
        break;
 
      case ACCENT_U_AIGU_RALT:
@@ -387,6 +396,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
            // will be unregister by `td_ralt_reset`
            register_code(KC_RALT);
        }
+       touched_td = true;
        break;
 
      case ACCENT_C_RALT:
@@ -399,6 +409,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
            // will be unregister by `td_ralt_reset`
            register_code(KC_RALT);
        }
+       touched_td = true;
        break;
 
      case ACCENT_A_GRAVE:
@@ -411,6 +422,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
            register_code(KC_A);
            unregister_code(KC_A);
        }
+       touched_td = true;
        break;
 
      case JET_RNM:
@@ -436,7 +448,45 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
        return false;
        break;
 
+     case JET_OPTI:
+       if (record->event.pressed) {
+           register_code(KC_LCTL);
+           register_code(KC_LALT);
+
+           tap_code(KC_O);
+           unregister_code(KC_LALT);
+           unregister_code(KC_LCTL);
+       }
+       return false;
+       break;
+
+     case  JET_FORMAT:
+       if (record->event.pressed) {
+           register_code(KC_LCTL);
+           register_code(KC_LALT);
+
+           tap_code(KC_L);
+           unregister_code(KC_LALT);
+           unregister_code(KC_LCTL);
+       }
+       return false;
+       break;
+
+     case  JET_FORMAT_OSX:
+       if (record->event.pressed) {
+           register_code(KC_LALT);
+           register_code(KC_LGUI);
+
+           tap_code(KC_L);
+           unregister_code(KC_LALT);
+           unregister_code(KC_LGUI);
+       }
+       return false;
+       break;
+
     case TD(TD_O):  // list all tap dance keycodes with tap-hold configurations
+    case TD(TD_A):
+    case TD(TD_A_OSX):
     case TD(TD_ESC):
     case TD(TD_ESC_OSX):
     case TD(TD_TAB):
@@ -467,7 +517,15 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
           tap_dance_tap_hold_t *tap_hold = (tap_dance_tap_hold_t *)action->user_data;
           tap_code16(tap_hold->tap);
       }
+
+      if ((keycode == TD(TD_A) || keycode == TD(TD_A_OSX)) && !touched_td && !record->event.pressed && action->state.finished) {
+          unregister_code(KC_LCTL);
+          tap_dance_tap_hold_t *tap_hold = (tap_dance_tap_hold_t *)action->user_data;
+          tap_code16(tap_hold->tap);
+      }
+      touched_td = true;
       break;
   }
+  touched_td = true;
   return true;
 }

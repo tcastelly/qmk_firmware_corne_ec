@@ -16,6 +16,8 @@ void tap_dance_tap_hold_reset(qk_tap_dance_state_t *state, void *user_data) {
 }
 
 void tap_dance_tap_hold_finished(qk_tap_dance_state_t *state, void *user_data) {
+    touched_td = false;
+
     tap_dance_tap_hold_t *tap_hold = (tap_dance_tap_hold_t *)user_data;
 
     if (state->pressed) {
@@ -37,6 +39,8 @@ void tap_dance_tap_hold_finished(qk_tap_dance_state_t *state, void *user_data) {
 // allow call multiple tap dance simultaneously
 // e.g: TD_DEL/TD_DEL_OSX
 void tap_dance_tap_hold_finished_unprotected(qk_tap_dance_state_t *state, void *user_data) {
+    touched_td = false;
+
     tap_dance_tap_hold_t *tap_hold = (tap_dance_tap_hold_t *)user_data;
 
     if (state->pressed) {
@@ -56,6 +60,8 @@ void tap_dance_tap_hold_finished_unprotected(qk_tap_dance_state_t *state, void *
 
 // START tap-hold
 void tap_dance_tap_hold_finished_layout(qk_tap_dance_state_t *state, void *user_data) {
+    touched_td = false;
+
     last_hold_t = timer_read();
 
     tap_dance_tap_hold_t *tap_hold = (tap_dance_tap_hold_t *)user_data;
@@ -124,6 +130,8 @@ static tap xtap_state = {
 };
 
 void td_ralt_finished (qk_tap_dance_state_t *state, void *user_data) {
+  touched_td = false;
+
   xtap_state.state = cur_dance(state);
   is_hold_tapdance_disabled = false;
 
@@ -160,6 +168,8 @@ void td_ralt_reset (qk_tap_dance_state_t *state, void *user_data) {
 }
 
 void td_ralt_osx_finished (qk_tap_dance_state_t *state, void *user_data) {
+  touched_td = false;
+
   xtap_state.state = cur_dance(state);
   is_hold_tapdance_disabled = false;
 
@@ -196,6 +206,8 @@ void td_ralt_osx_reset (qk_tap_dance_state_t *state, void *user_data) {
 }
 
 void td_lalt_finished (qk_tap_dance_state_t *state, void *user_data) {
+  touched_td = false;
+
   xtap_state.state = cur_dance(state);
   is_hold_tapdance_disabled = false;
 
@@ -230,6 +242,8 @@ void td_lalt_reset (qk_tap_dance_state_t *state, void *user_data) {
 }
 
 void td_lgui_finished (qk_tap_dance_state_t *state, void *user_data) {
+  touched_td = false;
+
   xtap_state.state = cur_dance(state);
   is_hold_tapdance_disabled = false;
 
@@ -264,6 +278,8 @@ void td_lgui_reset (qk_tap_dance_state_t *state, void *user_data) {
 }
 
 void td_lctl_finished (qk_tap_dance_state_t *state, void *user_data) {
+  touched_td = false;
+
   xtap_state.state = cur_dance(state);
   is_hold_tapdance_disabled = false;
 
