@@ -147,6 +147,7 @@ ASFLAGS += $(CFLAGS)
 
 LDFLAGS += -Wl,--build-id=none
 LDFLAGS += --specs=nosys.specs
+LDFLAGS += -Wl,--allow-multiple-definition
 LDFLAGS += -Wl,--wrap=sprintf
 LDFLAGS += -Wl,--wrap=snprintf
 LDFLAGS += -Wl,--wrap=vsnprintf

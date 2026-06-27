@@ -13,4 +13,4 @@ docker run \
     -v $PWD:/qmk_firmware \
     -v $PWD/.build:/qmk_firmware/.build\
     -ti qmkfm/qmk_cli:corne_ec\
-    make sekigon/crkbd_ec:tcy:uf2
+    make SKIP_GIT=1 QMK_BIN=bin/qmk sekigon/crkbd_ec:tcy:uf2
